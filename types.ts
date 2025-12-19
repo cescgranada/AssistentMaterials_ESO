@@ -1,30 +1,21 @@
 
-export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
-export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
+export type Subject = 'Llengua i Literatura' | 'Creació Literària' | 'Teatre' | 'Anglès';
 
-export interface TopicConfig {
-  id: string;
-  title: string;
-  contentSnippet: string;
-  isIncluded: boolean;
-  isAdapted: boolean;
-  theory: TheoryType;
-  systematizationCount: number;
-  extensionCount: number;
-}
-
-export interface GenerationSettings {
-  temperature: number;
-  model: 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+export interface Character {
+  name: string;
+  description: string;
 }
 
 export interface MaterialParams {
-  subject: Subject | '';
+  subject: Subject | string;
   grade: ESOGrade;
-  topics: TopicConfig[];
-  manualDescription?: string;
-  settings: GenerationSettings;
+  characters: Character[];
+  scenario: string;
+  settings: {
+    temperature: number;
+    model: string;
+  };
 }
 
 export interface GeneratedMaterial {

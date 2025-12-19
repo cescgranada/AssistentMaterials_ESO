@@ -1,114 +1,59 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { MaterialParams, TopicConfig, GeneratedMaterial } from "../types";
+import { MaterialParams, GeneratedMaterial } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-export const analyzeContentParts = async (fileText: string, manualText: string): Promise<{ title: string; snippet: string }[]> => {
-  const model = "gemini-3-flash-preview";
-  const prompt = `
-    TASCA: Analitzar el document i extreure'n una Taula de Continguts (Índex) autònoma i fidel per a una unitat didàctica d'ESO.
-    INSTRUCCIONS:
-    1. Identifica els títols principals del document o de la descripció.
-    2. Retorna un JSON format per un array d'objectes amb "title" i "snippet".
-    
-    TEXT: ${fileText.substring(0, 15000)}
-    DESCRIPCIÓ MANUAL: ${manualText}
-  `;
-
-  const response = await ai.models.generateContent({
-    model: model,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            snippet: { type: Type.STRING }
-          },
-          required: ["title", "snippet"]
-        }
-      }
-    }
-  });
-
-  try {
-    return JSON.parse(response.text || "[]");
-  } catch (e) {
-    return [{ title: "Contingut Principal", snippet: "Anàlisi general del document." }];
-  }
-};
-
-export const generateAIImage = async (prompt: string): Promise<string> => {
-  const imageAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await imageAI.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [{ text: `Diagrama educatiu professional per a l'ESO: ${prompt}. Estil net, fons blanc.` }],
-    },
-    config: {
-      imageConfig: { aspectRatio: "16:9" }
-    },
-  });
-
-  for (const part of response.candidates[0].content.parts) {
-    if (part.inlineData) {
-      return `data:image/png;base64,${part.inlineData.data}`;
-    }
-  }
-  throw new Error("No imatge");
-};
 
 export const generateMaterialStream = async (
   params: MaterialParams,
   onUpdate: (material: GeneratedMaterial) => void
 ): Promise<void> => {
-  const selectedTopics = params.topics.filter(t => t.isIncluded);
-  const topicsJson = JSON.stringify(selectedTopics.map((t, idx) => ({
-    bloc_num: idx + 1,
-    títol_original: t.title,
-    títol_formatat: idx === 0 ? t.title : `${idx}. ${t.title.replace(/^\d+[\s.]*/, '')}`,
-    teoria: t.theory,
-    sistematitzacio: t.systematizationCount,
-    ampliacio: t.extensionCount,
-    adaptat: t.isAdapted
-  })), null, 2);
-
+  const charactersStr = params.characters.map((c, i) => `Personatge ${i+1}: ${c.name} - ${c.description}`).join('\n');
+  
   const prompt = `
-    DIRECTRIUS DE FORMAT OBLIGATÒRIES PER A MICROSOFT WORD:
+    🧱 PROTOCOL MESTRE DEFINITIU: GENERACIÓ DIDÀCTICA I FEEDBACK IMMEDIAT
     
-    1. Títols Principals: Usa Markdown "# Títol". (Això es renderitzarà com a Calibri 18, Negreta).
-    2. Subtítols: Usa Markdown "## Subtítol". (Això es renderitzarà com a Calibri 14, Negreta).
-    3. Cos del text: Text estàndard sense marques. (Això es renderitzarà com a Calibri 12, Estàndard).
+    Ets un Expert en Disseny Pedagògic d'ESO. Has de generar una unitat didàctica completa de ${params.subject} per a ${params.grade} d'ESO basada en els següents elements:
     
-    ESTRUCTURA DE CONTINGUT:
-    - Bloc 1: Títol general sense número.
-    - Bloc 2 en endavant: "1. [Nom]", "2. [Nom]", etc.
-    - Exercicis: Llista bullet markdown (*) amb numeració interna X.Y. (Ex: "* 1.1. Calcula...").
+    ELEMENTS NARRATIUS:
+    ${charactersStr}
+    ESCENARI: ${params.scenario}
     
-    TAULA CURRICULAR: Genera una TAULA MARKDOWN amb 5 columnes: 
-    | Competències específiques | Sabers bàsics | Taxonomia de bloom | Principis de la DUA | Quins exercicis hi ha per fer-ho |
-    
-    REGLA DE CONSISTÈNCIA: Aplica aquesta jerarquia en tots i cadascun dels documents.
-    
-    NOTA DE CONTROL DE QUALITAT AL FINAL DE CADA RESPOSTA:
+    INSTRUCCIONS DE FORMAT I RIGOR:
+    1. REGLA D'OR: Tots els exercicis han d'acabar amb el resultat final escrit entre parèntesis i en negreta. 
+       FORMAT: [Enunciat...] (**Resultat: [Valor/Unitat]**)
+    2. ELIMINACIÓ TOTAL DE LATEX: No usis '$'. Usa Unicode: Σ, π, ·, :, √, x², cm³, H₂O.
+    3. JERARQUIA VISUAL (CALIBRI):
+       - # Títol (Markdown #, equivalent a Calibri 18pt Negreta).
+       - ## Subtítol (Markdown ##, equivalent a Calibri 14pt Negreta).
+       - Text estàndard (Calibri 12pt).
+    4. ESTRUCTURA DELS 5 DOCUMENTS (Genera'ls tots en ordre):
+       [GENERAL_START]
+       # Material de l'Alumnat: ${params.subject}
+       Teoria detallada sobre narrativa/anàlisi usant els personatges + Exercicis.
+       [ADAPTACIO_START]
+       # Material Adaptat DUA: ${params.subject}
+       Teoria simplificada, suport visual textual i exercicis guiats.
+       [PEDAGOGIA_START]
+       # Taula de Programació Curricular
+       Taula 5 columnes: Competència, Sabers, Bloom, DUA, Observacions.
+       [SOL_GENERAL_START]
+       # Solucionari Document General
+       Resolució pas a pas de cada exercici.
+       [SOL_ADAPTADA_START]
+       # Solucionari Document Adaptat
+       Resolució pas a pas detallada.
+       
+    REGLA DE CONSISTÈNCIA: Afegeix al final de cada document la nota: 
     "📏 Format de document a punt per a Word: Títol (C18B), Subtítols (C14B), Cos (C12)."
-
-    TAGS DE SORTIDA: [GENERAL_START], [ADAPTACIO_START], [PEDAGOGIA_START], [SOL_GENERAL_START], [SOL_ADAPTADA_START].
-    Cada secció ha de començar amb [MAIN_TITLE] i el títol en format "# Títol".
-    
-    TEMES: ${topicsJson}
   `;
 
   try {
     const responseStream = await ai.models.generateContentStream({
-      model: params.settings.model,
+      model: params.settings.model || 'gemini-3-flash-preview',
       contents: prompt,
       config: {
-        systemInstruction: "Ets un motor de generació didàctica ESO. Títols # (18pt), Subtítols ## (14pt), Text (12pt). Taules markdown. Afegeix nota de control.",
+        systemInstruction: "Ets un motor de generació ESO. Títols # (18pt), ## (14pt), text (12pt). Exercicis amb (Resultat: **valor**) obligatori. No LaTeX.",
         temperature: params.settings.temperature,
       }
     });
@@ -129,11 +74,11 @@ export const generateMaterialStream = async (
           pedagogical: pedPart?.trim() || "",
           solGeneral: solGenPart?.trim() || "",
           solAdapted: solAdapPart?.trim() || "",
-          hasAdaptedVersion: selectedTopics.some(t => t.isAdapted)
+          hasAdaptedVersion: true
         });
       }
     }
   } catch (error) {
-    throw new Error("Error de motor IA.");
+    throw new Error("Error en la generació. Revisa la teva clau API.");
   }
 };

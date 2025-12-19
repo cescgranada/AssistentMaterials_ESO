@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ArrowLeft, BookOpen, CheckCircle, Accessibility, Eye, Copy, Check, Loader2, ClipboardList, FileText, Printer, Code2, Terminal, Info, X, HelpCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Accessibility, Eye, Copy, Check, ClipboardList, FileText, Printer, Code2, Terminal, HelpCircle, X } from 'lucide-react';
 import { GeneratedMaterial } from '../types';
-import { generateAIImage } from '../services/geminiService';
 import { downloadFile } from '../utils/exportUtils';
 
 interface HelpModalProps {
@@ -25,91 +24,23 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => (
       </div>
       <div className="p-10 space-y-8 overflow-y-auto max-h-[70vh]">
         <section className="space-y-4">
-          <h4 className="font-black text-blue-700 uppercase tracking-widest text-sm flex items-center gap-2">
-            <Code2 className="w-5 h-5" /> 🧬 Overleaf (LaTeX)
-          </h4>
+          <h4 className="font-black text-blue-700 uppercase tracking-widest text-sm flex items-center gap-2">🧬 Overleaf (LaTeX)</h4>
           <div className="bg-slate-50 p-6 rounded-2xl text-sm text-slate-600 space-y-2 border border-slate-100">
-            <p>1. Vés a <strong>overleaf.com</strong> i inicia sessió.</p>
-            <p>2. Clica a <strong>"New Project"</strong> i selecciona <strong>"Blank Project"</strong>.</p>
-            <p>3. Selecciona tot el text del fitxer <em>main.tex</em> que surt per defecte i esborra'l.</p>
-            <p>4. Enganxa el codi generat al botó d'Overleaf i clica a <strong>"Recompile"</strong>.</p>
+            <p>1. Vés a <strong>overleaf.com</strong> i crea un "Blank Project".</p>
+            <p>2. Enganxa el codi del botó Overleaf per obtenir un document tipogràfic perfecte.</p>
           </div>
         </section>
-        
         <section className="space-y-4">
-          <h4 className="font-black text-emerald-600 uppercase tracking-widest text-sm flex items-center gap-2">
-            <Terminal className="w-5 h-5" /> 🐍 Google Colab (Notebook)
-          </h4>
-          <div className="bg-slate-50 p-6 rounded-2xl text-sm text-slate-600 space-y-2 border border-slate-100">
-            <p>1. Vés a <strong>colab.research.google.com</strong>.</p>
-            <p>2. Selecciona <strong>"Nuevo cuaderno"</strong>.</p>
-            <p>3. El format generat és un fitxer .ipynb que pots pujar directament des del menú <em>Archivo > Subir bloc de notas</em>.</p>
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <h4 className="font-black text-slate-700 uppercase tracking-widest text-sm flex items-center gap-2">
-            <FileText className="w-5 h-5" /> 📄 Word / Markdown
-          </h4>
-          <p className="text-sm text-slate-600 leading-relaxed pl-7">
-            Copia el contingut o descarrega el fitxer .md. Pots obrir-lo directament amb Microsoft Word i mantindrà la jerarquia de títols per a una edició ràpida.
-          </p>
+          <h4 className="font-black text-emerald-600 uppercase tracking-widest text-sm flex items-center gap-2">🐍 Colab (Python)</h4>
+          <p className="text-sm text-slate-600 pl-7">Enganxa el format .ipynb per treballar en l'entorn de programació de Google.</p>
         </section>
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button onClick={onClose} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 shadow-lg">Entesos, tancar guia</button>
+        <button onClick={onClose} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 shadow-lg">Entesos</button>
       </div>
     </div>
   </div>
 );
-
-interface AIVisualProps {
-  prompt: string;
-}
-
-const AIVisual: React.FC<AIVisualProps> = ({ prompt }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    const generate = async () => {
-      try {
-        const url = await generateAIImage(prompt);
-        if (mounted) {
-          setImageUrl(url);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (mounted) {
-          setError(true);
-          setLoading(false);
-        }
-      }
-    };
-    generate();
-    return () => { mounted = false; };
-  }, [prompt]);
-
-  if (loading) return (
-    <div className="my-8 p-10 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center gap-4 text-center animate-pulse">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generant suport visual IA...</p>
-    </div>
-  );
-
-  if (error || !imageUrl) return null;
-
-  return (
-    <div className="my-10">
-      <div className="rounded-[2.5rem] overflow-hidden border-4 border-white shadow-xl bg-slate-100">
-        <img src={imageUrl} alt={prompt} className="w-full h-auto" />
-      </div>
-      <p className="mt-3 text-center text-slate-400 text-[10px] font-bold italic">{prompt}</p>
-    </div>
-  );
-};
 
 interface MaterialDisplayProps {
   content: GeneratedMaterial;
@@ -137,64 +68,23 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
   const currentRawContent = getActiveContent();
 
   const handleDownload = (format: 'md' | 'tex' | 'ipynb') => {
-    const text = currentRawContent.replace('[MAIN_TITLE]', '').trim();
-    let filename = `material-eso-${activeTab}`;
+    let filename = `didactica-eso-${activeTab}`;
     let mime = "text/plain";
-    let exportText = text;
+    let exportText = currentRawContent;
 
     if (format === 'md') {
       filename += ".md";
       mime = "text/markdown";
     } else if (format === 'tex') {
       filename += ".tex";
-      exportText = `\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage[margin=1in]{geometry}\n\\begin{document}\n${text.replace(/#/g, '\\section')}\n\\end{document}`;
+      exportText = `\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage[catalan]{babel}\n\\begin{document}\n${currentRawContent.replace(/#/g, '\\section')}\n\\end{document}`;
     } else if (format === 'ipynb') {
       filename += ".ipynb";
       mime = "application/x-ipynb+json";
-      exportText = JSON.stringify({
-        cells: [{ cell_type: "markdown", metadata: {}, source: text.split('\n').map(l => l + '\n') }],
-        metadata: { kernelspec: { display_name: "Python 3", language: "python", name: "python3" } },
-        nbformat: 4, nbformat_minor: 0
-      });
+      exportText = JSON.stringify({ cells: [{ cell_type: "markdown", metadata: {}, source: currentRawContent.split('\n').map(l => l + '\n') }], metadata: {}, nbformat: 4, nbformat_minor: 0 });
     }
 
     downloadFile(exportText, filename, mime);
-  };
-
-  const renderContent = (text: string) => {
-    if (!text) return <p className="text-slate-400 italic">Generant contingut...</p>;
-    
-    const parts = text.split(/(\[VISUAL:.*?\])/g);
-    return parts.map((part, i) => {
-      const visualMatch = part.match(/\[VISUAL:(.*?)\]/);
-      if (visualMatch) return <AIVisual key={i} prompt={visualMatch[1].trim()} />;
-      
-      const isMainTitle = part.includes('[MAIN_TITLE]');
-      const cleanPart = part.replace('[MAIN_TITLE]', '').trim();
-
-      return (
-        <ReactMarkdown
-          key={i}
-          remarkPlugins={[remarkGfm]}
-          components={{
-            h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '25px', color: '#1e293b' }} {...props} />,
-            h2: ({node, ...props}) => <h2 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '30px', marginBottom: '15px', color: '#334155' }} {...props} />,
-            p: ({node, ...props}) => <p style={{ fontSize: '16px', fontWeight: 'normal', fontFamily: 'Calibri, sans-serif', marginBottom: '15px', lineHeight: '1.6' }} {...props} />,
-            ul: ({node, ...props}) => <ul className="list-none ml-0 mb-6 space-y-3" {...props} />,
-            li: ({node, ...props}) => <li style={{ fontSize: '16px', fontWeight: 'normal', fontFamily: 'Calibri, sans-serif' }} {...props} />,
-            table: ({node, ...props}) => (
-              <div className="overflow-x-auto my-8 border border-slate-200 rounded-2xl shadow-sm">
-                <table className="min-w-full divide-y divide-slate-200 border-collapse" {...props} />
-              </div>
-            ),
-            th: ({node, ...props}) => <th className="px-4 py-3 bg-slate-50 text-left text-[10px] font-black uppercase tracking-widest border border-slate-200 align-middle" {...props} />,
-            td: ({node, ...props}) => <td className="px-4 py-3 text-xs border border-slate-200 align-top leading-normal" {...props} />,
-          }}
-        >
-          {cleanPart}
-        </ReactMarkdown>
-      );
-    });
   };
 
   return (
@@ -202,7 +92,6 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       
       <div className="mb-6 flex flex-col gap-4 no-print">
-        {/* Fila superior: Botons de navegació i ajuda */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest active:scale-95">
             <ArrowLeft className="w-4 h-4" /> Tornar a l'inici
@@ -212,11 +101,10 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
           </button>
         </div>
 
-        {/* Fila de botons de descàrrega: TOTS EN UNA SOLA FILA */}
         <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
           <div className="flex flex-nowrap items-center gap-1 bg-white p-1.5 rounded-[1.5rem] border border-slate-200 shadow-xl min-w-max">
             <ActionButton 
-              onClick={() => { navigator.clipboard.writeText(currentRawContent.replace('[MAIN_TITLE]', '')); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
+              onClick={() => { navigator.clipboard.writeText(currentRawContent); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
               icon={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} 
               label="[📋 Copiar Text]" 
             />
@@ -234,12 +122,12 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
           <TabButton active={activeTab === 'general'} onClick={() => setActiveTab('general')} icon={<Eye className="w-4 h-4" />} label="Alumnat" />
           <TabButton active={activeTab === 'adapted'} onClick={() => setActiveTab('adapted')} icon={<Accessibility className="w-4 h-4" />} label="Adaptat" />
           <TabButton active={activeTab === 'pedagogical'} onClick={() => setActiveTab('pedagogical')} icon={<BookOpen className="w-4 h-4" />} label="Curricular" variant="blue" />
-          <TabButton active={activeTab === 'solGeneral'} onClick={() => setActiveTab('solGeneral')} icon={<CheckCircle className="w-4 h-4" />} label="Sols. Base" variant="green" />
+          <TabButton active={activeTab === 'solGeneral'} onClick={() => setActiveTab('solGeneral')} icon={<CheckCircle className="w-4 h-4" />} label="Sols. General" variant="green" />
           <TabButton active={activeTab === 'solAdapted'} onClick={() => setActiveTab('solAdapted')} icon={<ClipboardList className="w-4 h-4" />} label="Sols. Adaptat" variant="green" />
         </div>
       </div>
 
-      <div className="bg-white rounded-[1rem] shadow-2xl border border-slate-100 min-h-[11in] flex flex-col print:shadow-none print:border-none mx-auto max-w-[900px] p-12 md:p-24 relative overflow-hidden" style={{ fontVariantLigatures: 'none' }}>
+      <div className="bg-white rounded-[1rem] shadow-2xl border border-slate-100 min-h-[11in] flex flex-col print:shadow-none print:border-none mx-auto max-w-[900px] p-12 md:p-24 relative overflow-hidden">
         <div className="mb-12 flex justify-between items-center border-b pb-10 border-slate-50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-700 rounded-2xl flex items-center justify-center text-white text-base font-black shadow-xl">ESO</div>
@@ -248,15 +136,28 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
                 <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">{getDocTitle(activeTab)}</p>
               </div>
            </div>
-           <div className="text-right no-print">
-             <div className="bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-               <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest">Optimitzat per a Calibri</span>
-             </div>
-           </div>
         </div>
 
         <div className="flex-grow document-content text-slate-900">
-          {renderContent(currentRawContent)}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '25px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }} {...props} />,
+              h2: ({node, ...props}) => <h2 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '30px', marginBottom: '15px' }} {...props} />,
+              p: ({node, ...props}) => <p style={{ fontSize: '16px', fontWeight: 'normal', fontFamily: 'Calibri, sans-serif', marginBottom: '15px', lineHeight: '1.6' }} {...props} />,
+              ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-6 space-y-3" {...props} />,
+              li: ({node, ...props}) => <li style={{ fontSize: '16px', fontFamily: 'Calibri, sans-serif' }} {...props} />,
+              table: ({node, ...props}) => (
+                <div className="overflow-x-auto my-8 border border-slate-200 rounded-2xl">
+                  <table className="min-w-full divide-y divide-slate-200 border-collapse" {...props} />
+                </div>
+              ),
+              th: ({node, ...props}) => <th className="px-4 py-3 bg-slate-50 text-left text-[10px] font-black uppercase tracking-widest border border-slate-200" {...props} />,
+              td: ({node, ...props}) => <td className="px-4 py-3 text-xs border border-slate-200" {...props} />,
+            }}
+          >
+            {currentRawContent}
+          </ReactMarkdown>
         </div>
 
         <div className="mt-20 pt-10 border-t border-slate-50 text-center">
@@ -269,10 +170,10 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
 
 const getDocTitle = (tab: TabType) => {
   switch (tab) {
-    case 'general': return 'Material Alumnat (ESO)';
-    case 'adapted': return 'Material Adaptat (DUA)';
-    case 'pedagogical': return 'Programació Curricular (5 Col.)';
-    case 'solGeneral': return 'Solucionari Base';
+    case 'general': return 'Material Alumnat';
+    case 'adapted': return 'Material Adaptat DUA';
+    case 'pedagogical': return 'Taula Curricular';
+    case 'solGeneral': return 'Solucionari General';
     case 'solAdapted': return 'Solucionari Adaptat';
     default: return '';
   }

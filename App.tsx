@@ -56,7 +56,7 @@ const App: React.FC = () => {
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-left border-l-8 border-l-blue-700">
              <p className="text-slate-700 font-bold text-lg mb-2">Generació de materials</p>
              <p className="text-slate-600 text-sm leading-relaxed">
-               Creació d'apunts i exercicis de treball, propostes adaptades i les seves solucions tenint en compte la DUA i la Taxonomia de Bloom.
+               Creació d'apunts i exercicis de treball basats en personatges i escenaris, seguint el Protocol DUA i la Taxonomia de Bloom.
              </p>
           </div>
         </header>
@@ -82,11 +82,10 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 border-t border-slate-200 pt-8 w-full max-w-4xl flex flex-col md:flex-row justify-between items-center text-slate-400 text-[10px] px-4 font-bold uppercase tracking-[0.2em]">
-        <p>© 2024 Assistent Didàctic • ESO • DUA</p>
+        <p>© 2024 Assistent Didàctic • ESO • DUA • Bloom</p>
         <div className="flex gap-6 mt-4 md:mt-0">
           <span>Calibri 12/14/18</span>
           <span>Numeració X.Y.</span>
-          <span>Taxonomia de Bloom</span>
         </div>
       </footer>
     </div>
