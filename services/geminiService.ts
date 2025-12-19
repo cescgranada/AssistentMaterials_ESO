@@ -55,49 +55,46 @@ export const generateMaterialStream = async (
   const topicsJson = JSON.stringify(selectedTopics, null, 2);
 
   const prompt = `
-    🧱 PROTOCOL MESTRE DEFINITIU (EDICIÓ BLINDADA)
+    🧱 PROTOCOL MESTRE DEFINITIU (EDICIÓ BLINDADA - RIGOR ABSOLUT)
     
-    Ets un Expert en Disseny Pedagògic d'ESO. Genera una unitat de ${params.subject} per a ${params.grade} d'ESO.
+    Ets un motor de generació de materials per a l'ESO. Has de produir una unitat de ${params.subject} per a ${params.grade}.
     
-    TEMES/BLOCS SELECCIONATS:
+    TEMES SELECCIONATS A DESENVOLUPAR:
     ${topicsJson}
     
-    <RULES_DE_FERRO>
-    1. PROHIBICIÓ TOTAL DE DÒLARS ($): No utilitzis MAI el símbol $. Prohibit el format LaTeX. Qualsevol fórmula o variable ha d'anar en Text Pla i Negreta. (Ex: F = m · a).
-    2. NUMERACIÓ ALGORÍTMICA OBLIGATÒRIA: Tot exercici ha de començar amb el prefix [Apartat].[Exercici].. (Exemple: 1.1., 1.2., 2.1....).
-    3. RESULTATS: Tots els exercicis han de tancar-se amb: (**Resultat: [Valor]**).
-    4. SÍMBOLS UNICODE: Fes servir només: Σ, π, ·, :, √, ±, x², cm³, H₂O, Δ.
-    </RULES_DE_FERRO>
+    <RESTRICT_RULES_TOP_PRIORITY>
+    1. PROHIBICIÓ DE $ (LATEX): Està terminantment prohibit utilitzis el símbol $. Totes les fórmules i variables han d'anar en text pla i negreta (Ex: F = m · a). Fes servir Unicode: Σ, π, ·, :, √, ±, x², cm³, H₂O, Δ.
+    2. NUMERACIÓ VERTICAL ESTRICTA X.Y.: Cada exercici ha de començar obligatòriament en una línia nova amb el format [Apartat].[Número].. (Exemple: 1.1., 1.2., 2.1.). Està prohibit posar exercicis un rere l'altre en un mateix paràgraf.
+    3. RESULTATS OBLIGATORIS: Tots els exercicis sense excepció han de finalitzar amb el seu resultat entre parèntesis i en negreta: (**Resultat: [Valor]**).
+    </RESTRICT_RULES_TOP_PRIORITY>
 
     JERARQUIA VISUAL (CALIBRI):
     - # Títol (Calibri 18pt Negreta).
     - ## Subtítol (Calibri 14pt Negreta).
-    - Text (Calibri 12pt).
+    - Text estàndard (Calibri 12pt).
 
-    ESTRUCTURA DE SORTIDA (5 DOCUMENTS):
+    ESTRUCTURA DE SORTIDA (GENERA ELS 5 DOCUMENTS EN AQUEST ORDRE):
     [GENERAL_START]
-    # ${params.subject} - Alumnat
-    Teoria i exercicis per a tots els blocs seleccionats.
+    # Document General: Teoria i Exercicis
+    Conté la teoria detallada i els exercicis de sistematització i ampliació de TOTS els blocs seleccionats.
     
     [ADAPTACIO_START]
-    # ${params.subject} - Suport DUA
-    Genera contingut ADAPTAT (DUA) NOMÉS per als blocs que tinguin "isAdapted: true". 
-    Si un bloc no té "isAdapted: true", ignora'l en aquest document o resumeix-lo molt breument com a context.
-    Usa llenguatge clar, bastides cognitives i exercicis guiats.
+    # Document Adaptat: Suport DUA
+    Desenvolupa NOMÉS els apartats marcats amb "isAdapted: true". Usa llenguatge planer, frases curtes, suport visual textual i exercicis altament guiats.
     
     [PEDAGOGIA_START]
-    # Programació Curricular
-    Taula Markdown 5 columnes: Competència, Sabers, Bloom, DUA, Observacions.
+    # Document Curricular (Taula 5 col.)
+    Taula Markdown: Competència, Sabers, Bloom, DUA, Observacions.
     
     [SOL_GENERAL_START]
     # Solucionari General
-    Enunciat + Resolució detallada pas a pas de cada exercici del document General.
+    Enunciat + Resolució pas a pas detallada de cada exercici del Document General.
     
     [SOL_ADAPTADA_START]
     # Solucionari Adaptat
-    Enunciat + Resolució pas a pas de cada exercici del document Adaptat.
+    Enunciat + Resolució pas a pas detallada de cada exercici del Document Adaptat.
 
-    NOTA FINAL OBLIGATÒRIA A CADA DOCUMENT:
+    LLINIA DE TANCAMENT OBLIGATÒRIA A CADA DOCUMENT:
     "📏 Format de document a punt per a Word: Títol (C18B), Subtítols (C14B), Cos (C12)."
   `;
 
@@ -106,7 +103,14 @@ export const generateMaterialStream = async (
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        systemInstruction: "Ets un motor de generació ESO blindat. Títols # (18pt), ## (14pt), text (12pt). Numeració X.Y. obligatòria. Resultats (**Resultat: valor**) obligatoris. PROHIBIT l'ús de $ o LaTeX.",
+        systemInstruction: `
+          PROTOCOL ALGORÍTMIC BLINDAT:
+          - ZERO LATEX ($): Prohibició absoluta. Totes les fórmules en text pla negreta.
+          - NUMERACIÓ X.Y.: Tots els exercicis han de seguir el patró 1.1., 1.2., etc.
+          - RESULTATS: Cada exercici ha d'acabar amb (**Resultat: valor**).
+          - ESTRUCTURA: Separa els documents amb els tags [GENERAL_START], [ADAPTACIO_START], [PEDAGOGIA_START], [SOL_GENERAL_START], [SOL_ADAPTADA_START].
+          - ADAPTACIÓ: Només adapta els blocs marcats amb isAdapted: true.
+        `,
         temperature: params.settings.temperature,
       }
     });
@@ -128,6 +132,6 @@ export const generateMaterialStream = async (
       }
     }
   } catch (error) {
-    throw new Error("Error en la comunicació amb el motor d'IA.");
+    throw new Error("Error en la comunicació amb el motor d'IA. Revisa la connexió.");
   }
 };
