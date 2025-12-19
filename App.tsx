@@ -4,7 +4,7 @@ import { InputForm } from './components/InputForm';
 import { StoryDisplay } from './components/StoryDisplay';
 import { generateMaterialStream } from './services/geminiService';
 import { MaterialParams, GeneratedMaterial, MaterialState } from './types';
-import { Sparkles, ShieldAlert, GraduationCap } from 'lucide-react';
+import { ShieldAlert, GraduationCap } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<MaterialState>({
@@ -54,9 +54,9 @@ const App: React.FC = () => {
             Assistent Didàctic <span className="text-blue-700">ESO</span>
           </h1>
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-left border-l-8 border-l-blue-700">
-             <p className="text-slate-700 font-bold text-lg mb-2">Generació determinista de materials.</p>
+             <p className="text-slate-700 font-bold text-lg mb-2">Generació de materials</p>
              <p className="text-slate-600 text-sm leading-relaxed">
-               Crea fitxes de treball amb numeració X.Y., solucions integrades i versions adaptades DUA a partir dels teus apunts.
+               Creació d'apunts i exercicis de treball, propostes adaptades i les seves solucions tenint en compte la DUA i la Taxonomia de Bloom.
              </p>
           </div>
         </header>
@@ -84,9 +84,9 @@ const App: React.FC = () => {
       <footer className="mt-20 border-t border-slate-200 pt-8 w-full max-w-4xl flex flex-col md:flex-row justify-between items-center text-slate-400 text-[10px] px-4 font-bold uppercase tracking-[0.2em]">
         <p>© 2024 Assistent Didàctic • ESO • DUA</p>
         <div className="flex gap-6 mt-4 md:mt-0">
-          <span>Calibri 12/14</span>
+          <span>Calibri 12/14/18</span>
           <span>Numeració X.Y.</span>
-          <span>Protocol Determinista</span>
+          <span>Taxonomia de Bloom</span>
         </div>
       </footer>
     </div>

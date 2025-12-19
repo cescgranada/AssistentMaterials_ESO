@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ca">
   <head>
@@ -5,23 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Assistent Didàctic ESO</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
+      @font-face {
+        font-family: 'Calibri';
+        src: local('Calibri'), local('Calibri Regular'), local('Calibri-Regular');
+        font-weight: normal;
+        font-style: normal;
+      }
+      
       body {
-        /* Prioritat absoluta a Calibri per a tot el document */
+        /* Prioritat absoluta a Calibri */
         font-family: 'Calibri', 'Candara', 'Segoe UI', 'Optima', 'Arial', sans-serif;
-        font-size: 16px; /* 12pt ≈ 16px */
+        font-size: 16px; /* 12pt */
         line-height: 1.5;
+        background-color: #f8fafc;
       }
       
-      /* Mides de font segons requeriment: 12pt (16px) normal, 14pt (18.6px) títols */
-      .text-normal {
-        font-size: 16px !important;
-      }
-      
-      .text-heading {
-        font-size: 18.6px !important; /* 14pt */
-        font-weight: bold !important;
+      .document-content {
+        font-family: 'Calibri', sans-serif !important;
       }
 
       @keyframes fadeInUp {
@@ -42,13 +45,12 @@
         body {
           background: white !important;
           padding: 0 !important;
-          font-family: 'Calibri', sans-serif !important;
         }
         .no-print {
           display: none !important;
         }
-        header, footer, button {
-          display: none !important;
+        .print-only {
+          display: block !important;
         }
       }
     </style>

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { MaterialParams, ESOGrade, TheoryType, Subject, TopicConfig } from '../types';
-import { CheckCircle, Accessibility, Loader2, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { CheckCircle, Accessibility, Loader2, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2, AlertCircle } from 'lucide-react';
 import mammoth from 'mammoth';
 import * as pdfjs from 'pdfjs-dist';
 import { analyzeContentParts } from '../services/geminiService';
@@ -61,7 +61,6 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
     } catch (err) {
       alert("Error llegint el fitxer.");
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeFile = (e: React.MouseEvent) => {
@@ -72,10 +71,16 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
   };
 
   const handleStartAnalysis = async () => {
-    if (!params.subject || (!fileContent && !params.manualDescription)) return;
+    if (!params.subject || (!fileContent && !params.manualDescription)) {
+      alert("Si us plau, selecciona una matèria i puja un document o escriu una descripció.");
+      return;
+    }
     setIsAnalyzing(true);
     try {
       const analyzedParts = await analyzeContentParts(fileContent, params.manualDescription || "");
+      if (!analyzedParts || analyzedParts.length === 0) {
+        throw new Error("No s'han pogut identificar parts.");
+      }
       const initialTopics: TopicConfig[] = analyzedParts.map((p, idx) => ({
         id: `topic-${idx}`,
         title: p.title,
@@ -88,8 +93,8 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
       }));
       setParams(prev => ({ ...prev, topics: initialTopics }));
       setStep('topics');
-    } catch (error) {
-      alert("Error d'anàlisi del document.");
+    } catch (error: any) {
+      alert("Error d'anàlisi: " + error.message);
     } finally {
       setIsAnalyzing(false);
     }
@@ -103,11 +108,12 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
   };
 
   const formatBlocTitle = (title: string, index: number) => {
-    if (index === 0) return title;
-    // Elimina números previs i posa el nou índex (index. Títol)
+    if (index === 1) return title;
     const cleanTitle = title.replace(/^\d+[\s.]*/, '');
-    return `${index}. ${cleanTitle}`;
+    return `${index - 1}. ${cleanTitle}`;
   };
+
+  const canAnalyze = params.subject && (fileContent.trim() !== "" || params.manualDescription?.trim() !== "");
 
   if (step === 'setup') {
     return (
@@ -115,7 +121,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
         <div className="bg-slate-900 p-10 text-white text-center">
           <div className="inline-flex bg-blue-600 p-4 rounded-3xl mb-6 shadow-xl"><Sparkles className="w-8 h-8" /></div>
           <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">Configuració Unitat ESO</h2>
-          <p className="text-slate-400 font-medium tracking-wide">Fidelitat absoluta al currículum oficial.</p>
+          <p className="text-slate-400 font-medium tracking-wide">Fidelitat al currículum i inclusió DUA.</p>
         </div>
         
         <div className="p-10 space-y-10">
@@ -201,7 +207,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
                 {fileName && (
                   <button 
                     onClick={removeFile}
-                    className="absolute top-4 right-4 p-2 bg-white rounded-xl shadow-md text-red-500 hover:bg-red-50 transition-all border border-red-100 active:scale-90"
+                    className="absolute top-4 right-4 p-2 bg-white rounded-xl shadow-md text-red-500 hover:bg-red-50 transition-all border border-red-100 active:scale-90 z-10"
                     title="Eliminar fitxer"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -221,14 +227,22 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
             </div>
           </div>
 
-          <button 
-            onClick={handleStartAnalysis}
-            disabled={isAnalyzing || (!fileContent && !params.manualDescription) || !params.subject}
-            className="w-full py-6 rounded-3xl bg-blue-700 text-white font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-blue-800 disabled:bg-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95"
-          >
-            {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Wand2 className="w-6 h-6" />}
-            {isAnalyzing ? 'Analitzant document...' : 'Analitzar i continuar'}
-          </button>
+          <div className="flex flex-col gap-4">
+            {!canAnalyze && (
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-100">
+                <AlertCircle className="w-4 h-4" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-center flex-1">Selecciona una matèria i puja un document per activar l'anàlisi</p>
+              </div>
+            )}
+            <button 
+              onClick={handleStartAnalysis}
+              disabled={isAnalyzing || !canAnalyze}
+              className={`w-full py-6 rounded-3xl text-white font-black uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 ${canAnalyze ? 'bg-blue-700 hover:bg-blue-800' : 'bg-slate-200 cursor-not-allowed'}`}
+            >
+              {isAnalyzing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Wand2 className="w-6 h-6" />}
+              {isAnalyzing ? 'Analitzant document...' : 'Analitzar contingut'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -285,7 +299,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
                   </div>
                   <div className="grid grid-cols-2 gap-10">
                     <div className="space-y-4">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] block">Problemes X.Y. (Base)</label>
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] block">Problemes Base</label>
                       <input type="number" min="0" value={topic.systematizationCount} onChange={e => updateTopic(topic.id, { systematizationCount: parseInt(e.target.value) || 0 })} className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-6 font-black text-4xl text-blue-700 text-center focus:bg-white focus:border-blue-600 transition-all outline-none" />
                     </div>
                     <div className="space-y-4">
