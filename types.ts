@@ -1,3 +1,4 @@
+
 export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
 export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
@@ -13,11 +14,17 @@ export interface TopicConfig {
   extensionCount: number;
 }
 
+export interface GenerationSettings {
+  temperature: number;
+  model: 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+}
+
 export interface MaterialParams {
   subject: Subject | '';
   grade: ESOGrade;
   topics: TopicConfig[];
   manualDescription?: string;
+  settings: GenerationSettings;
 }
 
 export interface GeneratedMaterial {

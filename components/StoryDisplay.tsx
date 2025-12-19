@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ArrowLeft, FileCode, FileType, FileText, Check, Copy, Accessibility, Eye, FileDown, BookOpen, CheckCircle, ClipboardList, ImageIcon, Sparkles, Loader2 } from 'lucide-react';
-import { exportToColab, exportToOverleaf, exportToWord } from '../utils/exportUtils';
+import { ArrowLeft, FileDown, BookOpen, CheckCircle, Accessibility, Eye, Copy, Check, Loader2, ClipboardList, FileText, Printer, Download, Code2, BookMarked, Terminal } from 'lucide-react';
 import { GeneratedMaterial } from '../types';
 import { generateAIImage } from '../services/geminiService';
+import { downloadFile } from '../utils/exportUtils';
 
 interface AIVisualProps {
   prompt: string;
@@ -35,40 +36,21 @@ const AIVisual: React.FC<AIVisualProps> = ({ prompt }) => {
     return () => { mounted = false; };
   }, [prompt]);
 
-  if (loading) {
-    return (
-      <div className="my-10 p-12 bg-blue-50 rounded-[3rem] border-4 border-dashed border-blue-100 flex flex-col items-center gap-6 text-center animate-pulse">
-        <div className="p-4 bg-blue-600 rounded-2xl text-white shadow-xl">
-          <Loader2 className="w-10 h-10 animate-spin" />
-        </div>
-        <div className="space-y-3">
-          <p className="font-black text-blue-700 uppercase tracking-[0.3em] text-xs">Generant Suport Visual IA...</p>
-          <p className="text-blue-400 text-sm font-bold italic max-w-md">"{prompt}"</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="my-8 p-10 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center gap-4 text-center animate-pulse">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generant suport visual IA...</p>
+    </div>
+  );
 
-  if (error || !imageUrl) {
-    return (
-      <div className="my-10 p-10 bg-slate-50 rounded-[3rem] border-2 border-slate-200 flex flex-col items-center gap-4 text-center">
-        <ImageIcon className="w-10 h-10 text-slate-300" />
-        <p className="text-slate-400 text-sm font-bold italic">No s'ha pogut carregar l'esquema: {prompt}</p>
-      </div>
-    );
-  }
+  if (error || !imageUrl) return null;
 
   return (
-    <div className="my-12 group">
-      <div className="relative overflow-hidden rounded-[3rem] shadow-2xl border-8 border-white bg-slate-100 transition-all hover:scale-[1.01] hover:shadow-blue-200">
-        <img src={imageUrl} alt={prompt} className="w-full h-auto object-cover" />
-        <div className="absolute top-6 left-6 bg-blue-600 text-white px-5 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
-          <Sparkles className="w-3.5 h-3.5" /> Suport Visual IA
-        </div>
+    <div className="my-10">
+      <div className="rounded-[2.5rem] overflow-hidden border-4 border-white shadow-xl bg-slate-100">
+        <img src={imageUrl} alt={prompt} className="w-full h-auto" />
       </div>
-      <p className="mt-6 text-center text-slate-400 text-xs font-black uppercase tracking-[0.2em] px-8 leading-relaxed">
-        {prompt}
-      </p>
+      <p className="mt-3 text-center text-slate-400 text-[10px] font-bold italic">{prompt}</p>
     </div>
   );
 };
@@ -80,7 +62,7 @@ interface MaterialDisplayProps {
 
 type TabType = 'general' | 'adapted' | 'pedagogical' | 'solGeneral' | 'solAdapted';
 
-export const MaterialDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset }) => {
+export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [copied, setCopied] = useState(false);
 
@@ -95,46 +77,69 @@ export const MaterialDisplay: React.FC<MaterialDisplayProps> = ({ content, onRes
     }
   };
 
-  const currentContent = getActiveContent();
+  const currentRawContent = getActiveContent();
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(currentContent);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleDownload = (format: 'md' | 'tex' | 'ipynb') => {
+    const text = currentRawContent.replace('[MAIN_TITLE]', '').trim();
+    let filename = `material-eso-${activeTab}`;
+    let mime = "text/plain";
+    let exportText = text;
+
+    if (format === 'md') {
+      filename += ".md";
+      mime = "text/markdown";
+    } else if (format === 'tex') {
+      filename += ".tex";
+      exportText = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\begin{document}\n${text.replace(/#/g, '\\section')}\n\\end{document}`;
+    } else if (format === 'ipynb') {
+      filename += ".ipynb";
+      mime = "application/x-ipynb+json";
+      exportText = JSON.stringify({
+        cells: [{ cell_type: "markdown", metadata: {}, source: text.split('\n').map(l => l + '\n') }],
+        metadata: { kernelspec: { display_name: "Python 3", language: "python", name: "python3" } },
+        nbformat: 4, nbformat_minor: 0
+      });
+    }
+
+    downloadFile(exportText, filename, mime);
   };
 
-  // Helper to detect [VISUAL: ...] and render AIVisual components
   const renderContent = (text: string) => {
+    if (!text) return <p className="text-slate-400 italic">Generant contingut...</p>;
+    
     const parts = text.split(/(\[VISUAL:.*?\])/g);
     return parts.map((part, i) => {
-      const match = part.match(/\[VISUAL:(.*?)\]/);
-      if (match) {
-        return <AIVisual key={i} prompt={match[1].trim()} />;
+      const visualMatch = part.match(/\[VISUAL:(.*?)\]/);
+      if (visualMatch) return <AIVisual key={i} prompt={visualMatch[1].trim()} />;
+      
+      const isMainTitle = part.includes('[MAIN_TITLE]');
+      const cleanPart = part.replace('[MAIN_TITLE]', '').trim();
+
+      if (isMainTitle && cleanPart) {
+        return <h1 key={i} style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '30px' }}>{cleanPart}</h1>;
       }
+
       return (
         <ReactMarkdown
           key={i}
           remarkPlugins={[remarkGfm]}
           components={{
-            h1: ({node, ...props}) => <h1 className="text-5xl font-black text-slate-900 mb-12 pb-6 border-b-8 border-blue-600 tracking-tight leading-tight" {...props} />,
-            h2: ({node, ...props}) => <h2 className="text-3xl font-black text-blue-800 mt-20 mb-8 border-l-[12px] border-blue-600 pl-6 py-2 bg-blue-50/20 rounded-r-[2rem]" {...props} />,
-            h3: ({node, ...props}) => <h3 className="text-xl font-black text-slate-800 mt-12 mb-6 uppercase tracking-[0.2em] border-b-4 border-slate-100 pb-2 inline-block" {...props} />,
-            p: ({node, ...props}) => <p className="text-xl leading-[1.9] text-slate-700 mb-8 font-medium" {...props} />,
+            h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '25px' }} {...props} />,
+            h2: ({node, ...props}) => <h2 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '25px', marginBottom: '12px' }} {...props} />,
+            h3: ({node, ...props}) => <h3 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '20px', marginBottom: '10px' }} {...props} />,
+            p: ({node, ...props}) => <p style={{ fontSize: '16px', fontFamily: 'Calibri, sans-serif', marginBottom: '15px', lineHeight: '1.5' }} {...props} />,
+            ul: ({node, ...props}) => <ul className="list-none ml-0 mb-6 space-y-2" {...props} />,
+            li: ({node, ...props}) => <li style={{ fontSize: '16px', fontFamily: 'Calibri, sans-serif' }} {...props} />,
             table: ({node, ...props}) => (
-              <div className="overflow-x-auto my-16 shadow-2xl rounded-[2.5rem] border-4 border-black overflow-hidden bg-white">
-                <table className="min-w-full divide-y divide-black border-collapse" {...props} />
+              <div className="overflow-x-auto my-6 border border-slate-200 rounded-lg">
+                <table className="min-w-full divide-y divide-slate-200 border-collapse" {...props} />
               </div>
             ),
-            thead: ({node, ...props}) => <thead className="bg-black text-white" {...props} />,
-            th: ({node, ...props}) => <th className="px-8 py-6 text-left text-xs font-black uppercase tracking-[0.2em] border-r border-slate-800 last:border-0 text-white bg-black align-middle" {...props} />,
-            td: ({node, ...props}) => <td className="px-8 py-6 text-[15px] text-slate-900 border-r border-b border-slate-200 last:border-r-0 font-bold bg-white align-top leading-relaxed" {...props} />,
-            li: ({node, ...props}) => <li className="text-xl text-slate-700 mb-4 ml-8 marker:text-blue-600 font-medium" {...props} />,
-            strong: ({node, ...props}) => <strong className="text-slate-900 font-black" {...props} />,
-            hr: () => <hr className="my-20 border-t-8 border-slate-50" />,
-            img: ({src, alt}) => <AIVisual prompt={alt || "Esquema didàctic"} />
+            th: ({node, ...props}) => <th className="px-3 py-3 bg-slate-50 text-left text-[9px] font-black uppercase tracking-widest border border-slate-200 align-middle" {...props} />,
+            td: ({node, ...props}) => <td className="px-3 py-3 text-xs border border-slate-200 align-top leading-normal" {...props} />,
           }}
         >
-          {part}
+          {cleanPart}
         </ReactMarkdown>
       );
     });
@@ -142,108 +147,83 @@ export const MaterialDisplay: React.FC<MaterialDisplayProps> = ({ content, onRes
 
   return (
     <div className="w-full max-w-6xl animate-fade-in-up pb-20 px-4">
-      <div className="mb-8 flex flex-col xl:flex-row gap-6 justify-between items-center no-print">
-        <button 
-          onClick={onReset}
-          className="flex items-center gap-3 text-slate-700 font-black bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all active:scale-95 text-xs uppercase tracking-widest group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Editar Unitat
+      <div className="mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center no-print">
+        <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest">
+          <ArrowLeft className="w-3.5 h-3.5" /> Tornar
         </button>
 
-        <div className="flex items-center gap-2 bg-white p-2 rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
-          <MiniExportAction icon={<FileText className="w-5 h-5" />} onClick={() => exportToWord(currentContent)} color="blue" label="Word" />
-          <MiniExportAction icon={<FileDown className="w-5 h-5" />} onClick={() => window.print()} color="red" label="PDF" />
-          <MiniExportAction icon={<FileCode className="w-5 h-5" />} onClick={() => exportToColab(currentContent)} color="orange" label="Colab" />
-          <MiniExportAction icon={<FileType className="w-5 h-5" />} onClick={() => exportToOverleaf(currentContent)} color="green" label="LaTeX" />
-          <div className="w-px h-8 bg-slate-100 mx-2"></div>
-          <button onClick={copyToClipboard} title="Copiar text" className="p-3 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all active:scale-90">
-            {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-          </button>
+        <div className="flex flex-wrap items-center gap-1 bg-white p-1 rounded-2xl border border-slate-200 shadow-lg">
+          <ActionButton onClick={() => { navigator.clipboard.writeText(currentRawContent); setCopied(true); setTimeout(() => setCopied(false), 2000); }} icon={copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} label="Copiar" />
+          <div className="w-px h-4 bg-slate-100 mx-1"></div>
+          <ActionButton onClick={() => handleDownload('md')} icon={<FileText className="w-3.5 h-3.5" />} label="Word" />
+          <ActionButton onClick={() => handleDownload('tex')} icon={<Code2 className="w-3.5 h-3.5" />} label="LaTeX" />
+          <ActionButton onClick={() => handleDownload('ipynb')} icon={<Terminal className="w-3.5 h-3.5" />} label="Colab" />
+          <ActionButton onClick={() => window.print()} icon={<Printer className="w-3.5 h-3.5" />} label="PDF" highlight />
         </div>
       </div>
 
-      <div className="mb-12 overflow-x-auto no-print">
-        <div className="bg-slate-200/40 p-2 rounded-[2.5rem] flex gap-2 shadow-inner backdrop-blur-md w-max mx-auto border border-white">
-          <TabButton active={activeTab === 'general'} onClick={() => setActiveTab('general')} icon={<Eye className="w-4 h-4" />} label="Doc. Base" />
-          {content.hasAdaptedVersion && <TabButton active={activeTab === 'adapted'} onClick={() => setActiveTab('adapted')} icon={<Accessibility className="w-4 h-4" />} label="Doc. Adaptat" />}
-          <TabButton active={activeTab === 'pedagogical'} onClick={() => setActiveTab('pedagogical')} icon={<BookOpen className="w-4 h-4" />} label="Pedagogia" variant="blue" />
-          <TabButton active={activeTab === 'solGeneral'} onClick={() => setActiveTab('solGeneral')} icon={<CheckCircle className="w-4 h-4" />} label="Sol. Base" variant="green" />
-          {content.hasAdaptedVersion && <TabButton active={activeTab === 'solAdapted'} onClick={() => setActiveTab('solAdapted')} icon={<ClipboardList className="w-4 h-4" />} label="Sol. Adaptat" variant="green" />}
+      <div className="mb-8 overflow-x-auto no-print">
+        <div className="bg-slate-200/40 p-1.5 rounded-[2rem] flex gap-1.5 shadow-inner w-max mx-auto border border-white backdrop-blur-sm">
+          <TabButton active={activeTab === 'general'} onClick={() => setActiveTab('general')} icon={<Eye className="w-3.5 h-3.5" />} label="Alumnat" />
+          <TabButton active={activeTab === 'adapted'} onClick={() => setActiveTab('adapted')} icon={<Accessibility className="w-3.5 h-3.5" />} label="Adaptat" />
+          <TabButton active={activeTab === 'pedagogical'} onClick={() => setActiveTab('pedagogical')} icon={<BookOpen className="w-3.5 h-3.5" />} label="Curricular" variant="blue" />
+          <TabButton active={activeTab === 'solGeneral'} onClick={() => setActiveTab('solGeneral')} icon={<CheckCircle className="w-3.5 h-3.5" />} label="Sols. Base" variant="green" />
+          <TabButton active={activeTab === 'solAdapted'} onClick={() => setActiveTab('solAdapted')} icon={<ClipboardList className="w-3.5 h-3.5" />} label="Sols. Adaptat" variant="green" />
         </div>
       </div>
 
-      <div className="w-full">
-        <div className="bg-white rounded-[4rem] shadow-2xl border border-slate-100 min-h-[11in] flex flex-col print:shadow-none print:border-none overflow-hidden mx-auto max-w-[900px]">
-          <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/10">
-            <div className="flex items-center gap-4">
-               <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100">
-                  <BookOpen className="w-6 h-6" />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em]">Unitat Didàctic Professional</p>
-                  <p className="text-slate-400 font-serif italic text-xs">Escola Inclusiva i de Qualitat</p>
-               </div>
-            </div>
-            <div className="text-right">
-                <p className="text-[10px] text-slate-300 font-black tracking-[0.3em] uppercase">{getDocLabel(activeTab)}</p>
-            </div>
-          </div>
-          
-          <div className="p-12 md:p-20 prose prose-slate max-w-none flex-grow bg-white selection:bg-blue-100">
-              {renderContent(currentContent || "S'està generant el material expert...")}
-          </div>
+      <div className="bg-white rounded-lg shadow-2xl border border-slate-100 min-h-[11in] flex flex-col print:shadow-none print:border-none mx-auto max-w-[900px] p-12 md:p-20 relative overflow-hidden">
+        <div className="mb-12 flex justify-between items-center border-b pb-8 border-slate-50">
+           <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-xl">ESO</div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-700">Assistent Didàctic</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">{getDocTitle(activeTab)}</p>
+              </div>
+           </div>
+        </div>
 
-          <div className="p-8 border-t border-slate-50 bg-slate-50/30 text-center">
-            <p className="text-slate-300 text-[9px] font-black tracking-[0.5em] uppercase">ESO • DUA • VISUALS • QUALITAT DIDÀCTICA</p>
-          </div>
+        <div className="flex-grow document-content" style={{ fontFamily: 'Calibri, sans-serif' }}>
+          {renderContent(currentRawContent)}
+        </div>
+
+        <div className="mt-16 pt-8 border-t border-slate-50 text-center">
+           <p className="text-slate-300 text-[9px] font-black tracking-[0.5em] uppercase">ESO • DUA • CALIBRI 12/14/18 • {new Date().getFullYear()}</p>
         </div>
       </div>
     </div>
   );
 };
 
-const getDocLabel = (tab: TabType) => {
+const getDocTitle = (tab: TabType) => {
   switch (tab) {
-    case 'general': return 'Document de l\'Alumne/a';
-    case 'adapted': return 'Document Adaptat (DUA)';
-    case 'pedagogical': return 'Fitxa Tècnica Curricular';
-    case 'solGeneral': return 'Solucionari per al Docent';
-    case 'solAdapted': return 'Solucionari Document Adaptat';
+    case 'general': return 'Material Alumnat';
+    case 'adapted': return 'Material Adaptat (DUA)';
+    case 'pedagogical': return 'Taula Curricular';
+    case 'solGeneral': return 'Solucionari Base';
+    case 'solAdapted': return 'Solucionari Adaptat';
     default: return '';
   }
 };
 
 const TabButton = ({ active, onClick, icon, label, variant = 'white' }: any) => {
   const styles: any = {
-    white: active ? 'bg-white text-blue-700 shadow-xl border border-blue-50' : 'text-slate-500 hover:bg-white/50',
-    blue: active ? 'bg-blue-600 text-white shadow-xl' : 'text-slate-500 hover:bg-white/50',
-    green: active ? 'bg-emerald-600 text-white shadow-xl' : 'text-slate-500 hover:bg-white/50'
+    white: active ? 'bg-white text-blue-700 shadow-md border border-blue-50' : 'text-slate-500 hover:bg-white/50',
+    blue: active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-white/50',
+    green: active ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-white/50'
   };
   return (
-    <button 
-      onClick={onClick}
-      className={`px-6 py-3.5 rounded-[1.75rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all whitespace-nowrap active:scale-95 ${styles[variant]}`}
-    >
+    <button onClick={onClick} className={`px-4 py-2 rounded-[1.2rem] font-black text-[9px] uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap active:scale-95 ${styles[variant]}`}>
       {icon} {label}
     </button>
   );
 };
 
-const MiniExportAction = ({ icon, onClick, color, label }: any) => {
-  const styles: any = {
-    blue: 'text-blue-700 hover:bg-blue-600',
-    red: 'text-red-700 hover:bg-red-600',
-    orange: 'text-orange-700 hover:bg-orange-600',
-    green: 'text-green-700 hover:bg-green-600'
-  };
-  return (
-    <button 
-      onClick={onClick}
-      title={`Baixar en format ${label}`}
-      className={`p-3 rounded-2xl transition-all active:scale-90 flex items-center gap-2 hover:text-white ${styles[color]}`}
-    >
-      {icon}
-      <span className="text-[11px] font-black uppercase tracking-tight hidden md:block">{label}</span>
-    </button>
-  );
-};
+const ActionButton = ({ onClick, icon, label, highlight = false }: any) => (
+  <button 
+    onClick={onClick} 
+    className={`px-2.5 py-1 rounded-xl font-bold text-[8px] uppercase tracking-widest flex items-center gap-1.5 transition-all active:scale-90 ${highlight ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-slate-400 hover:bg-slate-50 hover:text-blue-600'}`}
+  >
+    {icon} <span>{label}</span>
+  </button>
+);

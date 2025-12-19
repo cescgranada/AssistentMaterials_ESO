@@ -1,5 +1,5 @@
 {
-  "name": "Assistent Didàctic ESO",
-  "description": "Eina professional per a docents per crear fitxes de treball i unitats didàctiques personalitzades per a l'ESO.",
+  "name": "Assistent Didàctic ESO: Generador de Materials",
+  "description": "Crea unitats didàctiques, problemes numerats i materials adaptats DUA per a l'ESO.",
   "requestFramePermissions": []
 }

@@ -8,11 +8,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: 'Inter', sans-serif;
+        /* Prioritat absoluta a Calibri per a tot el document */
+        font-family: 'Calibri', 'Candara', 'Segoe UI', 'Optima', 'Arial', sans-serif;
+        font-size: 16px; /* 12pt ≈ 16px */
+        line-height: 1.5;
       }
-      .font-heading {
-        font-family: 'Playfair Display', serif;
+      
+      /* Mides de font segons requeriment: 12pt (16px) normal, 14pt (18.6px) títols */
+      .text-normal {
+        font-size: 16px !important;
       }
+      
+      .text-heading {
+        font-size: 18.6px !important; /* 14pt */
+        font-weight: bold !important;
+      }
+
       @keyframes fadeInUp {
         from {
           opacity: 0;
@@ -31,12 +42,10 @@
         body {
           background: white !important;
           padding: 0 !important;
+          font-family: 'Calibri', sans-serif !important;
         }
         .no-print {
           display: none !important;
-        }
-        main {
-          padding: 0 !important;
         }
         header, footer, button {
           display: none !important;
