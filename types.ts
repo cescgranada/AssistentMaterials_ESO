@@ -1,17 +1,24 @@
 
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
-export type Subject = 'Llengua i Literatura' | 'Creació Literària' | 'Teatre' | 'Anglès';
+export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
+export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
 
-export interface Character {
-  name: string;
-  description: string;
+export interface TopicConfig {
+  id: string;
+  title: string;
+  contentSnippet: string;
+  isIncluded: boolean;
+  isAdapted: boolean;
+  theory: TheoryType;
+  systematizationCount: number;
+  extensionCount: number;
 }
 
 export interface MaterialParams {
   subject: Subject | string;
   grade: ESOGrade;
-  characters: Character[];
-  scenario: string;
+  topics: TopicConfig[];
+  manualDescription: string;
   settings: {
     temperature: number;
     model: string;

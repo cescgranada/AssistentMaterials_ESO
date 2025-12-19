@@ -26,17 +26,17 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => (
         <section className="space-y-4">
           <h4 className="font-black text-blue-700 uppercase tracking-widest text-sm flex items-center gap-2">🧬 Overleaf (LaTeX)</h4>
           <div className="bg-slate-50 p-6 rounded-2xl text-sm text-slate-600 space-y-2 border border-slate-100">
-            <p>1. Vés a <strong>overleaf.com</strong> i crea un "Blank Project".</p>
-            <p>2. Enganxa el codi del botó Overleaf per obtenir un document tipogràfic perfecte.</p>
+            <p>1. Vés a <strong>overleaf.com</strong>, crea un "Blank Project".</p>
+            <p>2. Enganxa el codi LaTeX generat per a una versió tipogràfica professional.</p>
           </div>
         </section>
         <section className="space-y-4">
-          <h4 className="font-black text-emerald-600 uppercase tracking-widest text-sm flex items-center gap-2">🐍 Colab (Python)</h4>
-          <p className="text-sm text-slate-600 pl-7">Enganxa el format .ipynb per treballar en l'entorn de programació de Google.</p>
+          <h4 className="font-black text-emerald-600 uppercase tracking-widest text-sm flex items-center gap-2">🐍 Colab (Notebook)</h4>
+          <p className="text-sm text-slate-600 pl-7">Enganxa el format .ipynb per a treballar amb cel·les de text i codi.</p>
         </section>
       </div>
       <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button onClick={onClose} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95 shadow-lg">Entesos</button>
+        <button onClick={onClose} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 active:scale-95 shadow-lg">Entesos</button>
       </div>
     </div>
   </div>
@@ -68,7 +68,7 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
   const currentRawContent = getActiveContent();
 
   const handleDownload = (format: 'md' | 'tex' | 'ipynb') => {
-    let filename = `didactica-eso-${activeTab}`;
+    let filename = `material-didactic-${activeTab}`;
     let mime = "text/plain";
     let exportText = currentRawContent;
 
@@ -77,7 +77,7 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
       mime = "text/markdown";
     } else if (format === 'tex') {
       filename += ".tex";
-      exportText = `\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage[catalan]{babel}\n\\begin{document}\n${currentRawContent.replace(/#/g, '\\section')}\n\\end{document}`;
+      exportText = `\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage[catalan]{babel}\n\\usepackage[margin=1in]{geometry}\n\\begin{document}\n${currentRawContent.replace(/#/g, '\\section')}\n\\end{document}`;
     } else if (format === 'ipynb') {
       filename += ".ipynb";
       mime = "application/x-ipynb+json";
@@ -93,10 +93,10 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
       
       <div className="mb-6 flex flex-col gap-4 no-print">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest active:scale-95">
+          <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 text-[10px] uppercase tracking-widest">
             <ArrowLeft className="w-4 h-4" /> Tornar a l'inici
           </button>
-          <button onClick={() => setShowHelp(true)} className="text-blue-700 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 px-3 py-2 rounded-xl transition-colors">
+          <button onClick={() => setShowHelp(true)} className="text-blue-700 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 px-3 py-2 rounded-xl">
             [❔ CLICA AQUÍ PER VEURE LA GUIA D'ÚS DELS FORMATS]
           </button>
         </div>
@@ -142,8 +142,8 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '25px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }} {...props} />,
-              h2: ({node, ...props}) => <h2 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '30px', marginBottom: '15px' }} {...props} />,
+              h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginBottom: '25px', color: '#1e293b' }} {...props} />,
+              h2: ({node, ...props}) => <h2 style={{ fontSize: '18.6px', fontWeight: 'bold', fontFamily: 'Calibri, sans-serif', marginTop: '30px', marginBottom: '15px', color: '#334155' }} {...props} />,
               p: ({node, ...props}) => <p style={{ fontSize: '16px', fontWeight: 'normal', fontFamily: 'Calibri, sans-serif', marginBottom: '15px', lineHeight: '1.6' }} {...props} />,
               ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-6 space-y-3" {...props} />,
               li: ({node, ...props}) => <li style={{ fontSize: '16px', fontFamily: 'Calibri, sans-serif' }} {...props} />,

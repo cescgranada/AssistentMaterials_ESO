@@ -54,9 +54,9 @@ const App: React.FC = () => {
             Assistent Didàctic <span className="text-blue-700">ESO</span>
           </h1>
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-left border-l-8 border-l-blue-700">
-             <p className="text-slate-700 font-bold text-lg mb-2">Generació de materials</p>
+             <p className="text-slate-700 font-bold text-lg mb-2">Generació de materials acadèmics</p>
              <p className="text-slate-600 text-sm leading-relaxed">
-               Creació d'apunts i exercicis de treball basats en personatges i escenaris, seguint el Protocol DUA i la Taxonomia de Bloom.
+               Crea apunts, exercicis numerats amb resultats immediats i materials adaptats DUA a partir dels teus documents o descripcions temàtiques.
              </p>
           </div>
         </header>
@@ -85,7 +85,7 @@ const App: React.FC = () => {
         <p>© 2024 Assistent Didàctic • ESO • DUA • Bloom</p>
         <div className="flex gap-6 mt-4 md:mt-0">
           <span>Calibri 12/14/18</span>
-          <span>Numeració X.Y.</span>
+          <span>Protocol Mestre V4</span>
         </div>
       </footer>
     </div>
