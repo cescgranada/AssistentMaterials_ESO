@@ -14,9 +14,9 @@
     "lucide-react": "0.460.0",
     "@google/genai": "0.2.1",
     "react-markdown": "9.0.1",
-    "pdfjs-dist": "^5.4.449",
-    "remark-gfm": "^4.0.1",
-    "mammoth": "^1.11.0"
+    "remark-gfm": "4.0.0",
+    "mammoth": "1.6.0",
+    "pdfjs-dist": "4.0.379"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

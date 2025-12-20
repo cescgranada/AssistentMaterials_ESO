@@ -1,19 +1,4 @@
 
-export interface StoryConfig {
-  name1: string;
-  name2: string;
-  name3: string;
-  description: string;
-  setting: string;
-}
-
-export interface StoryState {
-  content: string;
-  isGenerating: boolean;
-  error: string | null;
-}
-
-// Added missing types for educational material generation
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
 export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
 export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';

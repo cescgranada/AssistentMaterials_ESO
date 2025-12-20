@@ -1,163 +1,104 @@
 
 import React, { useState } from 'react';
-import { Sparkles, User, MapPin, BookOpen, Send, RefreshCcw } from 'lucide-react';
-import { StoryConfig, StoryState } from './types';
-import { generateStory } from './services/geminiService';
-import ReactMarkdown from 'react-markdown';
+import { InputForm } from './components/InputForm';
+import { StoryDisplay } from './components/StoryDisplay';
+import { MaterialParams, GeneratedMaterial } from './types';
+import { generateEducationalMaterial } from './services/geminiService';
+import { Loader2, GraduationCap } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [config, setConfig] = useState<StoryConfig>({
-    name1: '',
-    name2: '',
-    name3: '',
-    description: '',
-    setting: ''
-  });
+  const [step, setStep] = useState<'setup' | 'topics' | 'result'>('setup');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [params, setParams] = useState<MaterialParams | null>(null);
+  const [result, setResult] = useState<GeneratedMaterial | null>(null);
 
-  const [state, setState] = useState<StoryState>({
-    content: '',
-    isGenerating: false,
-    error: null
-  });
-
-  const handleGenerate = async () => {
-    if (!config.name1 || !config.name2 || !config.name3 || !config.setting) {
-      setState(s => ({ ...s, error: "Si us plau, omple tots els camps dels personatges i l'escenari." }));
-      return;
-    }
-
-    setState({ content: '', isGenerating: true, error: null });
+  const handleSubmit = async (p: MaterialParams) => {
+    setParams(p);
+    setIsGenerating(true);
     try {
-      const story = await generateStory(config);
-      setState({ content: story, isGenerating: false, error: null });
-    } catch (err: any) {
-      setState({ content: '', isGenerating: false, error: err.message });
+      const generated = await generateEducationalMaterial(p);
+      setResult(generated);
+      setStep('result');
+    } catch (error) {
+      alert("Error generant el material. Revisa la clau API.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const isFormValid = config.name1 && config.name2 && config.name3 && config.setting;
+  const reset = () => {
+    setStep('setup');
+    setResult(null);
+    setParams(null);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 md:p-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <header className="text-center mb-12 animate-fade">
-          <div className="inline-flex p-3 bg-indigo-600 rounded-2xl shadow-lg mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Navbar Didàctica */}
+      <nav className="bg-white border-b border-slate-200 py-4 px-8 flex items-center justify-between no-print sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-xl text-white">
+            <GraduationCap className="w-6 h-6" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Creador d' <span className="text-indigo-600">Històries</span>
-          </h1>
-          <p className="mt-4 text-slate-600 font-medium">Defineix els teus protagonistes i deixa que la màgia de la IA faci la resta.</p>
-        </header>
+          <div>
+            <h1 className="font-black text-slate-900 tracking-tighter uppercase text-sm">Assistent Didàctic <span className="text-blue-600">ESO</span></h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generador DUA-Bloom</p>
+          </div>
+        </div>
+        {step !== 'setup' && (
+          <button onClick={reset} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">
+            Nova Unitat
+          </button>
+        )}
+      </nav>
 
-        {!state.content ? (
-          <div className="glass-card rounded-[2rem] shadow-xl p-8 md:p-10 animate-fade">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                  <User className="w-3 h-3" /> Personatge 1
-                </label>
-                <input 
-                  type="text" 
-                  value={config.name1}
-                  onChange={e => setConfig({...config, name1: e.target.value})}
-                  placeholder="Ex: Marc el Guerrer"
-                  className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                  <User className="w-3 h-3" /> Personatge 2
-                </label>
-                <input 
-                  type="text" 
-                  value={config.name2}
-                  onChange={e => setConfig({...config, name2: e.target.value})}
-                  placeholder="Ex: Laia la Maga"
-                  className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                  <User className="w-3 h-3" /> Personatge 3
-                </label>
-                <input 
-                  type="text" 
-                  value={config.name3}
-                  onChange={e => setConfig({...config, name3: e.target.value})}
-                  placeholder="Ex: Drac Ruffy"
-                  className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium transition-all"
-                />
+      <main className="flex-grow flex flex-col items-center py-12 px-4">
+        {isGenerating ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 animate-pulse">
+            <div className="relative">
+              <div className="w-24 h-24 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <GraduationCap className="w-10 h-10 text-blue-600" />
               </div>
             </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                  <MapPin className="w-3 h-3" /> Escenari
-                </label>
-                <input 
-                  type="text" 
-                  value={config.setting}
-                  onChange={e => setConfig({...config, setting: e.target.value})}
-                  placeholder="Ex: Un bosc encantat sota la llum de la lluna blava"
-                  className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium transition-all"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-                  <BookOpen className="w-3 h-3" /> Breu Descripció / Trama
-                </label>
-                <textarea 
-                  value={config.description}
-                  onChange={e => setConfig({...config, description: e.target.value})}
-                  placeholder="De què tractarà la història? Ex: Un viatge per trobar un tresor perdut..."
-                  className="w-full h-32 p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium transition-all resize-none"
-                />
-              </div>
+            <div className="text-center">
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Generant Material Didàctic</h2>
+              <p className="text-slate-400 font-medium">Aplicant protocols DUA i criteris Bloom...</p>
             </div>
-
-            {state.error && (
-              <p className="mt-4 text-rose-500 text-sm font-bold bg-rose-50 p-3 rounded-lg border border-rose-100 italic">
-                {state.error}
-              </p>
-            )}
-
-            <button 
-              onClick={handleGenerate}
-              disabled={state.isGenerating || !isFormValid}
-              className={`w-full mt-10 py-5 rounded-2xl flex items-center justify-center gap-3 text-white font-bold text-lg shadow-xl transition-all active:scale-95 ${isFormValid ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
-            >
-              {state.isGenerating ? (
-                <RefreshCcw className="w-6 h-6 animate-spin" />
-              ) : (
-                <Send className="w-6 h-6" />
-              )}
-              {state.isGenerating ? 'Generant el teu relat...' : 'Crear Història'}
-            </button>
           </div>
         ) : (
-          <div className="animate-fade">
-            <div className="bg-white rounded-[2rem] shadow-2xl p-8 md:p-16 border border-slate-100 prose prose-indigo max-w-none prose-h1:text-4xl prose-h2:text-2xl prose-p:text-lg prose-p:leading-relaxed">
-              <ReactMarkdown>{state.content}</ReactMarkdown>
-            </div>
-            
-            <div className="mt-8 flex justify-center">
-              <button 
-                onClick={() => setState(s => ({...s, content: ''}))}
-                className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2 active:scale-95"
-              >
-                <RefreshCcw className="w-5 h-5" /> Crear una altra història
-              </button>
-            </div>
-          </div>
+          <>
+            {step === 'setup' && (
+              <InputForm 
+                onSubmit={handleSubmit} 
+                isGenerating={false} 
+                initialParams={params}
+                initialStep="setup"
+                onStepChange={(s) => setStep(s)}
+              />
+            )}
+            {step === 'topics' && (
+              <InputForm 
+                onSubmit={handleSubmit} 
+                isGenerating={false} 
+                initialParams={params}
+                initialStep="topics"
+                onStepChange={(s) => setStep(s)}
+              />
+            )}
+            {step === 'result' && result && (
+              <StoryDisplay 
+                content={result} 
+                onReset={reset} 
+                onBackToEdit={() => setStep('topics')}
+              />
+            )}
+          </>
         )}
-      </div>
+      </main>
 
-      <footer className="mt-16 text-center text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">
-        IA STORYTELLER • CATALÀ • 2024
+      <footer className="py-8 text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.5em] no-print">
+        Protocol Didàctic v2025 • Google Gemini AI
       </footer>
     </div>
   );
