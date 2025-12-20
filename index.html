@@ -6,8 +6,7 @@
     <title>Assistent Didàctic ESO</title>
     <script>
       /**
-       * SHIM DE PROCESS: Moltes llibreries de React esperen l'existència de 'process.env'.
-       * Si no està definit, l'aplicació falla silenciosament amb una pantalla blanca.
+       * SHIM DE PROCESS: Evita que l'aplicació falli si una llibreria busca process.env
        */
       window.process = { 
         env: { 
@@ -20,21 +19,15 @@
       };
       
       /**
-       * CAPTURADOR D'ERRORS: Si falla la càrrega inicial, mostra un missatge per facilitar el diagnòstic.
+       * ERROR HANDLER: Ajuda a diagnosticar si falla algun mòdul
        */
       window.onerror = function(msg, url, line, col, error) {
-        console.error("Error global capturat: ", msg, " en ", url, ":", line);
+        if (msg.includes('Script error')) return;
+        console.error("Error detectat: ", msg);
         const root = document.getElementById('root');
         if (root && root.innerHTML === "") {
-          root.innerHTML = `
-            <div style="padding: 40px; color: #721c24; background: #f8d7da; font-family: sans-serif; border-radius: 8px; margin: 20px; border: 1px solid #f5c6cb;">
-              <h2 style="margin-top: 0;">Error de càrrega de l'aplicació</h2>
-              <p>S'ha produït un error al carregar els mòduls. Això pot ser degut a la connexió o a una clau API no configurada.</p>
-              <pre style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 4px; overflow: auto;">${msg}</pre>
-              <p><small>${url} (Línia ${line})</small></p>
-              <button onclick="location.reload()" style="background: #721c24; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">Reintentar</button>
-            </div>
-          `;
+          root.innerHTML = '<div style="padding:20px;color:#721c24;background:#f8d7da;border:1px solid #f5c6cb;border-radius:5px;margin:20px;font-family:sans-serif;">' +
+            '<b>Error de càrrega:</b> ' + msg + '<br><small>' + url + ':' + line + '</small></div>';
         }
       };
     </script>
@@ -47,41 +40,20 @@
         font-weight: normal;
         font-style: normal;
       }
-      
       body {
         font-family: 'Inter', 'Calibri', 'Segoe UI', sans-serif;
-        font-size: 16px; 
-        line-height: 1.5;
         background-color: #f8fafc;
         margin: 0;
-      }
-      
-      .document-content {
-        font-family: 'Calibri', sans-serif !important;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
       }
       .animate-fade-in-up {
         animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
-      
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
       @media print {
-        body {
-          background: white !important;
-          padding: 0 !important;
-        }
-        .no-print {
-          display: none !important;
-        }
+        .no-print { display: none !important; }
       }
     </style>
     <script type="importmap">
@@ -102,7 +74,7 @@
 }
 </script>
   </head>
-  <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
+  <body class="bg-slate-50 min-h-screen antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
