@@ -1,7 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MaterialParams, ESOGrade, TheoryType, Subject, TopicConfig } from '../types';
-import { CheckCircle, Accessibility, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2, AlertCircle, ChevronRight } from 'lucide-react';
+import { CheckCircle, Accessibility, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2, Cpu, ArrowLeft } from 'lucide-react';
 import mammoth from 'mammoth';
 import * as pdfjs from 'pdfjs-dist';
 import { analyzeContentParts } from '../services/geminiService';
@@ -11,21 +11,24 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://esm.sh/pdfjs-dist@${pdfjs.version
 interface InputFormProps {
   onSubmit: (params: MaterialParams) => void;
   isGenerating: boolean;
+  initialParams: MaterialParams | null;
+  initialStep: 'setup' | 'topics';
+  onStepChange: (step: 'setup' | 'topics') => void;
 }
 
 const SUBJECT_OPTIONS: Subject[] = ['Física', 'Química', 'Biologia', 'Geologia', 'Tecnologia', 'Matemàtiques', 'Llengua i Literatura'];
 
-export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) => {
-  const [step, setStep] = useState<'setup' | 'topics'>('setup');
+export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating, initialParams, initialStep, onStepChange }) => {
+  const [step, setStep] = useState<'setup' | 'topics'>(initialStep);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [params, setParams] = useState<MaterialParams>({
+  const [params, setParams] = useState<MaterialParams>(initialParams || {
     subject: '',
     grade: '1r',
     topics: [],
     manualDescription: '',
     settings: {
-      temperature: 0.1,
+      temperature: 0.3,
       model: 'gemini-3-pro-preview'
     }
   });
@@ -33,6 +36,10 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setStep(initialStep);
+  }, [initialStep]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,7 +96,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
         extensionCount: 1
       }));
       setParams(prev => ({ ...prev, topics: initialTopics }));
-      setStep('topics');
+      onStepChange('topics');
     } catch (error: any) {
       alert("Error d'anàlisi.");
     } finally {
@@ -115,7 +122,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
           <p className="text-slate-400 font-medium tracking-wide">Fidelitat al currículum i inclusió DUA.</p>
         </div>
         
-        <div className="p-10 space-y-10">
+        <div className="p-10 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">Matèria</label>
@@ -141,6 +148,54 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
                 <option value="4t">4t d'ESO</option>
               </select>
             </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-6">
+            <button 
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4 hover:text-blue-700 transition-colors"
+            >
+              <Settings2 className="w-4 h-4" />
+              {showAdvanced ? 'Amagar Configuració Avançada' : 'Mostrar Configuració Avançada'}
+            </button>
+            
+            {showAdvanced && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-slate-50 rounded-3xl border border-slate-100 animate-fade-in">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <Cpu className="w-3 h-3" /> Model d'IA
+                  </label>
+                  <select 
+                    value={params.settings.model}
+                    onChange={e => setParams(p => ({...p, settings: {...p.settings, model: e.target.value}}))}
+                    className="w-full p-3 rounded-xl border-2 border-white focus:border-blue-600 outline-none bg-white font-bold text-slate-800 transition-all text-xs"
+                  >
+                    <option value="gemini-3-pro-preview">Gemini 3 Pro (Recomanat)</option>
+                    <option value="gemini-3-flash-preview">Gemini 3 Flash (Més ràpid)</option>
+                  </select>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <SlidersHorizontal className="w-3 h-3" /> Temperatura ({params.settings.temperature})
+                    </label>
+                  </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={params.settings.temperature}
+                    onChange={e => setParams(p => ({...p, settings: {...p.settings, temperature: parseFloat(e.target.value)}}))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                    <span>Més Precís</span>
+                    <span>Més Creatiu</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-8 pt-6 border-t border-slate-100">
@@ -197,7 +252,9 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating }) 
             <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1">Configura els blocs de la unitat</p>
           </div>
         </div>
-        <button onClick={() => setStep('setup')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-xs transition-all uppercase tracking-widest border border-slate-200">Enrere</button>
+        <button onClick={() => onStepChange('setup')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-xs transition-all uppercase tracking-widest border border-slate-200 flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> Tornar a l'inici
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-8">

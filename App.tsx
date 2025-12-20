@@ -6,25 +6,33 @@ import { generateMaterialStream } from './services/geminiService';
 import { MaterialParams, GeneratedMaterial, MaterialState } from './types';
 import { ShieldAlert, GraduationCap } from 'lucide-react';
 
+type NavigationStep = 'setup' | 'topics' | 'result';
+
 const App: React.FC = () => {
   const [state, setState] = useState<MaterialState>({
     material: null,
     isGenerating: false,
     error: null
   });
-  const [showResult, setShowResult] = useState(false);
+  const [currentStep, setCurrentStep] = useState<NavigationStep>('setup');
+  const [params, setParams] = useState<MaterialParams | null>(null);
 
-  const handleGenerate = async (params: MaterialParams) => {
+  const handleParamsUpdate = (newParams: MaterialParams) => {
+    setParams(newParams);
+  };
+
+  const handleGenerate = async (finalParams: MaterialParams) => {
+    setParams(finalParams);
     setState(prev => ({ 
       ...prev, 
       isGenerating: true, 
       error: null, 
       material: { general: '', adapted: '', pedagogical: '', solGeneral: '', solAdapted: '', hasAdaptedVersion: false } 
     }));
-    setShowResult(true);
+    setCurrentStep('result');
 
     try {
-      await generateMaterialStream(params, (update) => {
+      await generateMaterialStream(finalParams, (update) => {
         setState(prev => ({
           ...prev,
           material: prev.material ? { ...prev.material, ...update } : update
@@ -37,15 +45,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleReset = () => {
+  const handleFullReset = () => {
     setState({ material: null, isGenerating: false, error: null });
-    setShowResult(false);
+    setParams(null);
+    setCurrentStep('setup');
+  };
+
+  const handleBackToTopics = () => {
+    setCurrentStep('topics');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col items-center">
       
-      {!showResult && (
+      {currentStep !== 'result' && (
         <header className="mb-12 text-center max-w-2xl animate-fade-in-up">
           <div className="inline-flex items-center justify-center p-4 bg-blue-700 rounded-3xl shadow-xl mb-6">
             <GraduationCap className="w-10 h-10 text-white" />
@@ -74,10 +87,22 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {!showResult ? (
-          <InputForm onSubmit={handleGenerate} isGenerating={state.isGenerating} />
+        {currentStep !== 'result' ? (
+          <InputForm 
+            onSubmit={handleGenerate} 
+            isGenerating={state.isGenerating} 
+            initialParams={params}
+            initialStep={currentStep}
+            onStepChange={setCurrentStep}
+          />
         ) : (
-          state.material && <StoryDisplay content={state.material} onReset={handleReset} />
+          state.material && (
+            <StoryDisplay 
+              content={state.material} 
+              onReset={handleFullReset} 
+              onBackToEdit={handleBackToTopics}
+            />
+          )
         )}
       </main>
 

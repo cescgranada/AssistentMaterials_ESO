@@ -45,72 +45,84 @@ export const analyzeContentParts = async (fileText: string, manualText: string):
 };
 
 /**
- * Genera el material complet seguint el protocol mestre.
+ * Genera el material complet seguint el protocol mestre V.2025.
  */
 export const generateMaterialStream = async (
   params: MaterialParams,
   onUpdate: (material: GeneratedMaterial) => void
 ): Promise<void> => {
   const selectedTopics = params.topics.filter(t => t.isIncluded);
-  const topicsJson = JSON.stringify(selectedTopics, null, 2);
+  
+  // Preparem la descripció dels blocs per al prompt
+  const topicsSummary = selectedTopics.map(t => {
+    return `- BLOC: ${t.title} (Teoria: ${t.theory.toUpperCase()}, Exercicis Base: ${t.systematizationCount}, Ampliació: ${t.extensionCount}, DUA: ${t.isAdapted ? 'SÍ' : 'NO'})`;
+  }).join('\n');
+
+  const systemInstruction = `
+📥 SYSTEM INSTRUCTIONS: PROTOCOL MESTRE DEFINITIU (V. TOTAL BLINDADA 2025)
+
+Ets un motor de generació de materials per a l'ESO. Ets un Expert Pedagògic i DUA.
+
+<AI_ENGINE_CONFIGURATION>
+NO_LATEX_POLICY:
+- Prohibició total del símbol $ i de qualsevol sintaxi LaTeX.
+- Usa Text Pla i Negreta.
+- Símbols permesos: Σ, π, ·, :, √, ±, x², cm³, H₂O, Δ.
+</AI_ENGINE_CONFIGURATION>
+
+<LOGICA_TEORIA_BOTONS>
+- CAP: Salta directament als exercicis. Prohibida qualsevol teoria.
+- BREU RESUM: Màxim 2-3 paràgrafs concisos.
+- ESQUEMÀTIC: Esquema visual amb llistes niades Markdown.
+- DETALLAT: Explicació extensa. OBLIGATORI: 1 taula, 2 esquemes de text ASCII/flux i 2 etiquetes d'imatge amb descripció [Imatge de: ...].
+</LOGICA_TEORIA_BOTONS>
+
+<RESTRICT_RULES_TOP_PRIORITY>
+1. NUMERACIÓ X.Y.: Cada exercici comença en línia nova amb prefix [Apartat].[Número]. (Ex: 1.1., 1.2.).
+2. LLISTA GARANTIDA: Cada exercici ha de començar EXACTAMENT amb "- " (guionet + espai) dins d'una llista Markdown.
+3. RESULTATS: Tots els exercicis acaben amb (**Resultat: [Valor]**).
+</RESTRICT_RULES_TOP_PRIORITY>
+  `;
 
   const prompt = `
-    🧱 PROTOCOL MESTRE DEFINITIU (EDICIÓ BLINDADA - RIGOR ABSOLUT)
-    
-    Ets un motor de generació de materials per a l'ESO. Has de produir una unitat de ${params.subject} per a ${params.grade}.
+    ETAPA_I_CURS: ${params.grade} d'ESO
+    MATERIA: ${params.subject}
+    UNITAT_TEMA: ${params.manualDescription || "Basat en els blocs següents"}
     
     TEMES SELECCIONATS A DESENVOLUPAR:
-    ${topicsJson}
-    
-    <RESTRICT_RULES_TOP_PRIORITY>
-    1. PROHIBICIÓ DE $ (LATEX): Està terminantment prohibit utilitzis el símbol $. Totes les fórmules i variables han d'anar en text pla i negreta (Ex: F = m · a). Fes servir Unicode: Σ, π, ·, :, √, ±, x², cm³, H₂O, Δ.
-    2. NUMERACIÓ VERTICAL ESTRICTA X.Y.: Cada exercici ha de començar obligatòriament en una línia nova amb el format [Apartat].[Número].. (Exemple: 1.1., 1.2., 2.1.). Està prohibit posar exercicis un rere l'altre en un mateix paràgraf.
-    3. RESULTATS OBLIGATORIS: Tots els exercicis sense excepció han de finalitzar amb el seu resultat entre parèntesis i en negreta: (**Resultat: [Valor]**).
-    </RESTRICT_RULES_TOP_PRIORITY>
+    ${topicsSummary}
 
-    JERARQUIA VISUAL (CALIBRI):
-    - # Títol (Calibri 18pt Negreta).
-    - ## Subtítol (Calibri 14pt Negreta).
-    - Text estàndard (Calibri 12pt).
+    Genera els documents seguint aquest ordre i estructura:
 
-    ESTRUCTURA DE SORTIDA (GENERA ELS 5 DOCUMENTS EN AQUEST ORDRE):
     [GENERAL_START]
-    # Document General: Teoria i Exercicis
-    Conté la teoria detallada i els exercicis de sistematització i ampliació de TOTS els blocs seleccionats.
+    # ${params.subject} - Material Alumnat
+    Desenvolupa la teoria segons el nivell indicat per a cada bloc i els exercicis en format llista "- X.Y.".
     
     [ADAPTACIO_START]
-    # Document Adaptat: Suport DUA
-    Desenvolupa NOMÉS els apartats marcats amb "isAdapted: true". Usa llenguatge planer, frases curtes, suport visual textual i exercicis altament guiats.
+    # ${params.subject} - Suport DUA
+    Desenvolupa NOMÉS els blocs marcats amb DUA: SÍ. Aplica frases curtes, passos guiats i accessibilitat lectora.
     
     [PEDAGOGIA_START]
-    # Document Curricular (Taula 5 col.)
-    Taula Markdown: Competència, Sabers, Bloom, DUA, Observacions.
+    # Programació Curricular
+    Taula Markdown 5 columnes exactes: Competència, Sabers, Bloom, DUA, Exercicis corresponents.
     
     [SOL_GENERAL_START]
     # Solucionari General
-    Enunciat + Resolució pas a pas detallada de cada exercici del Document General.
+    Enunciat complet + resolució pas a pas de cada exercici del Document General. Tanca amb (**Resultat: ...**).
     
     [SOL_ADAPTADA_START]
     # Solucionari Adaptat
-    Enunciat + Resolució pas a pas detallada de cada exercici del Document Adaptat.
-
-    LLINIA DE TANCAMENT OBLIGATÒRIA A CADA DOCUMENT:
-    "📏 Format de document a punt per a Word: Títol (C18B), Subtítols (C14B), Cos (C12)."
+    Enunciat complet + resolució pas a pas de cada exercici del Document Adaptat. Tanca amb (**Resultat: ...**).
+    
+    REGLA FINAL: No afegeixis notes meta ni explicacions. Segueix la numeració vertical estricta i la llista amb guionets.
   `;
 
   try {
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-3-pro-preview',
+      model: params.settings.model || 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        systemInstruction: `
-          PROTOCOL ALGORÍTMIC BLINDAT:
-          - ZERO LATEX ($): Prohibició absoluta. Totes les fórmules en text pla negreta.
-          - NUMERACIÓ X.Y.: Tots els exercicis han de seguir el patró 1.1., 1.2., etc.
-          - RESULTATS: Cada exercici ha d'acabar amb (**Resultat: valor**).
-          - ESTRUCTURA: Separa els documents amb els tags [GENERAL_START], [ADAPTACIO_START], [PEDAGOGIA_START], [SOL_GENERAL_START], [SOL_ADAPTADA_START].
-          - ADAPTACIÓ: Només adapta els blocs marcats amb isAdapted: true.
-        `,
+        systemInstruction: systemInstruction,
         temperature: params.settings.temperature,
       }
     });
@@ -132,6 +144,6 @@ export const generateMaterialStream = async (
       }
     }
   } catch (error) {
-    throw new Error("Error en la comunicació amb el motor d'IA. Revisa la connexió.");
+    throw new Error("Error en la comunicació amb el motor d'IA. Verifica la teva clau API o la connexió.");
   }
 };

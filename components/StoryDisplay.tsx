@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ArrowLeft, BookOpen, CheckCircle, Accessibility, Eye, Copy, Check, ClipboardList, FileText, Printer, Code2, Terminal, HelpCircle, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Accessibility, Eye, Copy, Check, ClipboardList, FileText, Printer, Code2, Terminal, HelpCircle, X, Home, Edit3 } from 'lucide-react';
 import { GeneratedMaterial } from '../types';
 import { downloadFile } from '../utils/exportUtils';
 
@@ -45,11 +45,12 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => (
 interface MaterialDisplayProps {
   content: GeneratedMaterial;
   onReset: () => void;
+  onBackToEdit: () => void;
 }
 
 type TabType = 'general' | 'adapted' | 'pedagogical' | 'solGeneral' | 'solAdapted';
 
-export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset }) => {
+export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset, onBackToEdit }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [copied, setCopied] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -93,9 +94,14 @@ export const StoryDisplay: React.FC<MaterialDisplayProps> = ({ content, onReset 
       
       <div className="mb-6 flex flex-col gap-4 no-print">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 text-[10px] uppercase tracking-widest">
-            <ArrowLeft className="w-4 h-4" /> Tornar a l'inici
-          </button>
+          <div className="flex gap-3">
+            <button onClick={onReset} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 text-[10px] uppercase tracking-widest">
+              <Home className="w-4 h-4" /> Tornar a l'inici
+            </button>
+            <button onClick={onBackToEdit} className="flex items-center gap-2 text-slate-500 font-bold bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 text-[10px] uppercase tracking-widest">
+              <Edit3 className="w-4 h-4" /> Tornar a l'edició
+            </button>
+          </div>
           <button onClick={() => setShowHelp(true)} className="text-blue-700 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 px-3 py-2 rounded-xl">
             [❔ CLICA AQUÍ PER VEURE LA GUIA D'ÚS DELS FORMATS]
           </button>
