@@ -1,7 +1,22 @@
 
+export interface StoryConfig {
+  name1: string;
+  name2: string;
+  name3: string;
+  description: string;
+  setting: string;
+}
+
+export interface StoryState {
+  content: string;
+  isGenerating: boolean;
+  error: string | null;
+}
+
+// Added missing types for educational material generation
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
-export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
 export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
+export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
 
 export interface TopicConfig {
   id: string;
@@ -15,7 +30,7 @@ export interface TopicConfig {
 }
 
 export interface MaterialParams {
-  subject: Subject | string;
+  subject: Subject | '';
   grade: ESOGrade;
   topics: TopicConfig[];
   manualDescription: string;
@@ -31,11 +46,4 @@ export interface GeneratedMaterial {
   pedagogical: string;
   solGeneral: string;
   solAdapted: string;
-  hasAdaptedVersion: boolean;
-}
-
-export interface MaterialState {
-  material: GeneratedMaterial | null;
-  isGenerating: boolean;
-  error: string | null;
 }
