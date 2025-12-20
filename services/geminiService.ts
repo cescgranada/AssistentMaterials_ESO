@@ -2,12 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MaterialParams, GeneratedMaterial } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 /**
  * Analitza el text per extreure els blocs o temes principals.
  */
 export const analyzeContentParts = async (fileText: string, manualText: string): Promise<{ title: string; snippet: string }[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const model = "gemini-3-flash-preview";
   const prompt = `
     TASCA: Analitzar el document i extreure'n una Taula de Continguts (Índex) per a una unitat didàctica d'ESO.
@@ -51,6 +50,7 @@ export const generateMaterialStream = async (
   params: MaterialParams,
   onUpdate: (material: GeneratedMaterial) => void
 ): Promise<void> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const selectedTopics = params.topics.filter(t => t.isIncluded);
   
   // Preparem la descripció dels blocs per al prompt

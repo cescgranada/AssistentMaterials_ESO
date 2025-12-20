@@ -6,8 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Assistent Didàctic ESO</title>
     <script>
-      // Shim per evitar errors de "process is not defined" en el client
-      window.process = window.process || { env: { API_KEY: "" } };
+      // Shim robust per evitar errors de "process is not defined"
+      window.process = { 
+        env: { 
+          API_KEY: "" 
+        },
+        nextTick: function(fn) { setTimeout(fn, 0); }
+      };
+      
+      // Capturador d'errors per debugging visual si falla la càrrega
+      window.onerror = function(msg, url, line, col, error) {
+        console.error("Error global capturat: ", msg, " en ", url, ":", line);
+        const root = document.getElementById('root');
+        if (root && root.innerHTML === "") {
+          root.innerHTML = '<div style="padding: 20px; color: red; font-family: sans-serif;">' +
+            '<h2>Error de càrrega</h2>' +
+            '<p>' + msg + '</p>' +
+            '<p><small>' + url + ':' + line + '</small></p>' +
+            '</div>';
+        }
+      };
     </script>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -24,6 +42,7 @@
         font-size: 16px; 
         line-height: 1.5;
         background-color: #f8fafc;
+        margin: 0;
       }
       
       .document-content {
@@ -57,24 +76,24 @@
         }
       }
     </style>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
-    "@google/genai": "https://esm.sh/@google/genai@0.2.1",
     "react": "https://esm.sh/react@18.3.1",
     "react-dom": "https://esm.sh/react-dom@18.3.1",
     "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
+    "@google/genai": "https://esm.sh/@google/genai@0.2.1",
     "react-markdown": "https://esm.sh/react-markdown@9.0.1",
     "remark-gfm": "https://esm.sh/remark-gfm@4.0.0",
     "mammoth": "https://esm.sh/mammoth@1.6.0",
     "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.0.379",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
-</head>
+  </head>
   <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
