@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ca">
   <head>
@@ -6,24 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Assistent Didàctic ESO</title>
     <script>
-      // Shim robust per evitar errors de "process is not defined"
+      /**
+       * SHIM DE PROCESS: Moltes llibreries de React esperen l'existència de 'process.env'.
+       * Si no està definit, l'aplicació falla silenciosament amb una pantalla blanca.
+       */
       window.process = { 
         env: { 
+          NODE_ENV: 'production',
           API_KEY: "" 
         },
-        nextTick: function(fn) { setTimeout(fn, 0); }
+        nextTick: function(fn) { setTimeout(fn, 0); },
+        cwd: function() { return '/'; },
+        platform: 'browser'
       };
       
-      // Capturador d'errors per debugging visual si falla la càrrega
+      /**
+       * CAPTURADOR D'ERRORS: Si falla la càrrega inicial, mostra un missatge per facilitar el diagnòstic.
+       */
       window.onerror = function(msg, url, line, col, error) {
         console.error("Error global capturat: ", msg, " en ", url, ":", line);
         const root = document.getElementById('root');
         if (root && root.innerHTML === "") {
-          root.innerHTML = '<div style="padding: 20px; color: red; font-family: sans-serif;">' +
-            '<h2>Error de càrrega</h2>' +
-            '<p>' + msg + '</p>' +
-            '<p><small>' + url + ':' + line + '</small></p>' +
-            '</div>';
+          root.innerHTML = `
+            <div style="padding: 40px; color: #721c24; background: #f8d7da; font-family: sans-serif; border-radius: 8px; margin: 20px; border: 1px solid #f5c6cb;">
+              <h2 style="margin-top: 0;">Error de càrrega de l'aplicació</h2>
+              <p>S'ha produït un error al carregar els mòduls. Això pot ser degut a la connexió o a una clau API no configurada.</p>
+              <pre style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 4px; overflow: auto;">${msg}</pre>
+              <p><small>${url} (Línia ${line})</small></p>
+              <button onclick="location.reload()" style="background: #721c24; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">Reintentar</button>
+            </div>
+          `;
         }
       };
     </script>
@@ -38,7 +49,7 @@
       }
       
       body {
-        font-family: 'Calibri', 'Candara', 'Segoe UI', 'Optima', 'Arial', sans-serif;
+        font-family: 'Inter', 'Calibri', 'Segoe UI', sans-serif;
         font-size: 16px; 
         line-height: 1.5;
         background-color: #f8fafc;
@@ -70,9 +81,6 @@
         }
         .no-print {
           display: none !important;
-        }
-        .print-only {
-          display: block !important;
         }
       }
     </style>
