@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { MaterialParams, GeneratedMaterial } from "../types";
 
@@ -43,6 +42,12 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
     .map(t => `- TEMA: ${t.title}. Teoria: ${t.theory}. Exercicis base: ${t.systematizationCount}. Exercicis repte: ${t.extensionCount}. Adaptat DUA: ${t.isAdapted ? 'SI' : 'NO'}`)
     .join('\n');
 
+  const contextPrompt = `
+    ELEMENTS CREATIUS ADICIONALS (Usa'ls per a contextualitzar els exercicis o exemples si és pertinent):
+    - Personatges: ${params.characters || 'No especificats'}
+    - Escenari: ${params.scenario || 'No especificat'}
+  `;
+
   const systemInstruction = `
     PROTOCOLO MESTRE DEFINITIU (V. 2025). 
     IDIOMA: ca. MATERIA: ${params.subject}. CURS: ${params.grade}.
@@ -59,6 +64,8 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
     Genera el material didàctic segons aquests temes:
     ${topicsStr}
     
+    ${contextPrompt}
+
     ESTRUCTURA DE SORTIDA (Obligatòria amb separadors):
     [DOC_GENERAL]
     ... contingut ...
@@ -86,7 +93,8 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
   const extract = (tag: string) => {
     const parts = fullText.split(`[${tag}]`);
     if (parts.length < 2) return "Contingut no generat.";
-    const content = parts[1].split('[DOC_')[0].split('[SOL_')[0].trim();
+    // Netegem el tancament per evitar que agafi el següent tag
+    const content = parts[1].split('[DOC_')[0].split('[SOL_')[0].split('[DOC_PEDAGOGIC]')[0].trim();
     return content;
   };
 
