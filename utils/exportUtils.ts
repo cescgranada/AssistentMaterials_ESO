@@ -11,8 +11,8 @@ export const downloadFile = (content: string, filename: string, mimeType: string
   URL.revokeObjectURL(url);
 };
 
-export const exportStory = (content: string, type: 'md' | 'txt') => {
-  const filename = type === 'md' ? "historia-creastoria.md" : "historia-creastoria.txt";
+export const exportMaterial = (content: string, type: 'md' | 'txt') => {
+  const filename = type === 'md' ? "material-didactic.md" : "material-didactic.txt";
   const mime = type === 'md' ? "text/markdown" : "text/plain";
   downloadFile(content, filename, mime);
 };
