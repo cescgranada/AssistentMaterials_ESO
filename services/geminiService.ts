@@ -6,7 +6,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const analyzeContentParts = async (fileContent: string, manualDescription: string): Promise<{ title: string, snippet: string }[]> => {
   const model = 'gemini-3-flash-preview';
   const prompt = `
-    Analitza aquesta unitat didàctica i divideix-la en els 3-5 temes o apartats més importants.
+    Analitza aquesta unitat didàctica i divideix-la en els 3-5 temes o apartats més importants per a un curs d'ESO.
     PROPORCIONA NOMÉS JSON.
     Document: ${fileContent.substring(0, 10000)}
     Descripció: ${manualDescription}
@@ -42,12 +42,6 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
     .map(t => `- TEMA: ${t.title}. Teoria: ${t.theory}. Exercicis base: ${t.systematizationCount}. Exercicis repte: ${t.extensionCount}. Adaptat DUA: ${t.isAdapted ? 'SI' : 'NO'}`)
     .join('\n');
 
-  const contextPrompt = `
-    ELEMENTS CREATIUS ADICIONALS (Usa'ls per a contextualitzar els exercicis o exemples si és pertinent):
-    - Personatges: ${params.characters || 'No especificats'}
-    - Escenari: ${params.scenario || 'No especificat'}
-  `;
-
   const systemInstruction = `
     PROTOCOLO MESTRE DEFINITIU (V. 2025). 
     IDIOMA: ca. MATERIA: ${params.subject}. CURS: ${params.grade}.
@@ -56,25 +50,25 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
     2. VISUAL FIRST: Taules, infografies descrites i organitzadors visuals rics.
     3. LLISTA GARANTIDA: Exercicis en llista amb "- ". Línia en blanc entre ells.
     4. FORMAT EXERCICIS: [Apartat].[Número]. (ex: 1.1.) i acaba amb (**Resultat: [Valor]**).
-    5. TEORIA: Aplica el nivell especificat per cada tema.
+    5. TEORIA: Aplica el nivell especificat per cada tema amb rigor acadèmic.
     6. DOCUMENTS: Genera 5 seccions clarament separades per una etiqueta [SECTION_ID].
   `;
 
   const prompt = `
-    Genera el material didàctic segons aquests temes:
+    Genera el material didàctic segons aquests temes i paràmetres acadèmics:
     ${topicsStr}
     
-    ${contextPrompt}
+    Descripció addicional del context: ${params.manualDescription}
 
     ESTRUCTURA DE SORTIDA (Obligatòria amb separadors):
     [DOC_GENERAL]
-    ... contingut ...
+    ... contingut per a l'alumnat ...
     [DOC_ADAPTAT]
-    ... contingut ...
+    ... contingut amb suport DUA (llenguatge planer, bastides) ...
     [DOC_PEDAGOGIC]
     ... taula curricular 5 columnes (Competències, Sabers, Bloom, DUA, Exercicis) ...
     [SOL_GENERAL]
-    ... solucionari ...
+    ... solucionari detallat ...
     [SOL_ADAPTAT]
     ... solucionari adaptat ...
   `;
@@ -93,7 +87,6 @@ export const generateEducationalMaterial = async (params: MaterialParams): Promi
   const extract = (tag: string) => {
     const parts = fullText.split(`[${tag}]`);
     if (parts.length < 2) return "Contingut no generat.";
-    // Netegem el tancament per evitar que agafi el següent tag
     const content = parts[1].split('[DOC_')[0].split('[SOL_')[0].split('[DOC_PEDAGOGIC]')[0].trim();
     return content;
   };

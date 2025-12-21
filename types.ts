@@ -1,4 +1,3 @@
-
 export type ESOGrade = '1r' | '2n' | '3r' | '4t';
 export type TheoryType = 'cap' | 'resum breu' | 'esquemàtic' | 'detallat';
 export type Subject = 'Física' | 'Química' | 'Biologia' | 'Geologia' | 'Tecnologia' | 'Matemàtiques' | 'Llengua i Literatura';
@@ -19,8 +18,6 @@ export interface MaterialParams {
   grade: ESOGrade;
   topics: TopicConfig[];
   manualDescription: string;
-  characters: string; // Nou: 3 noms de personatges
-  scenario: string;   // Nou: Escenari
   settings: {
     temperature: number;
     model: string;

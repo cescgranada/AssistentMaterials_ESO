@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MaterialParams, ESOGrade, TheoryType, Subject, TopicConfig } from '../types';
-import { CheckCircle, Accessibility, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2, Cpu, ArrowLeft, Users, MapPin } from 'lucide-react';
+import { CheckCircle, Accessibility, ListTree, Check, X, FileUp, Sparkles, Wand2, Settings2, SlidersHorizontal, Trash2, Cpu, ArrowLeft } from 'lucide-react';
 import mammoth from 'mammoth';
 import * as pdfjs from 'pdfjs-dist';
 import { analyzeContentParts } from '../services/geminiService';
@@ -26,8 +26,6 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating, in
     grade: '1r',
     topics: [],
     manualDescription: '',
-    characters: '',
-    scenario: '',
     settings: {
       temperature: 0.3,
       model: 'gemini-3-pro-preview'
@@ -151,33 +149,6 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating, in
             </div>
           </div>
 
-          <div className="space-y-6 pt-4">
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" /> Noms de 3 personatges (Opcional)
-              </label>
-              <input 
-                type="text"
-                value={params.characters}
-                onChange={e => setParams(p => ({...p, characters: e.target.value}))}
-                placeholder="Ex: Marc, Laia, en Pol..."
-                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-600 outline-none bg-slate-50 font-bold text-slate-800 transition-all text-sm"
-              />
-            </div>
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-600" /> Escenari de la història (Opcional)
-              </label>
-              <input 
-                type="text"
-                value={params.scenario}
-                onChange={e => setParams(p => ({...p, scenario: e.target.value}))}
-                placeholder="Ex: Un bosc encantat, un laboratori futurista..."
-                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-600 outline-none bg-slate-50 font-bold text-slate-800 transition-all text-sm"
-              />
-            </div>
-          </div>
-
           <div className="border-t border-slate-100 pt-6">
             <button 
               onClick={() => setShowAdvanced(!showAdvanced)}
@@ -247,7 +218,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isGenerating, in
               <textarea 
                 value={params.manualDescription}
                 onChange={e => setParams(p => ({...p, manualDescription: e.target.value}))}
-                placeholder="Ex: Unitat sobre cinemàtica o un relat sobre..."
+                placeholder="Ex: Unitat sobre cinemàtica o un relleu geogràfic..."
                 className="w-full h-32 p-6 rounded-[2rem] border-2 border-slate-100 focus:border-blue-600 outline-none bg-slate-50 font-medium text-slate-700 transition-all text-sm resize-none"
               />
             </div>
